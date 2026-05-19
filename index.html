@@ -1019,6 +1019,21 @@
             $('btnSaveResult').disabled = true;
             $('btnSaveResult').textContent = '⏳ 保存中...';
             try {
+                // 压缩图片再上传，限制最大 1600px 宽
+                const compressed = await new Promise(resolve => {
+                    const img = new Image();
+                    img.onload = () => {
+                        const maxW = 1600;
+                        if (img.naturalWidth <= maxW) { resolve(state.croppedDataURL); return; }
+                        const scale = maxW / img.naturalWidth;
+                        const cv = document.createElement('canvas');
+                        cv.width = maxW;
+                        cv.height = Math.round(img.naturalHeight * scale);
+                        cv.getContext('2d').drawImage(img, 0, 0, cv.width, cv.height);
+                        resolve(cv.toDataURL('image/png'));
+                    };
+                    img.src = state.croppedDataURL;
+                });
                 const results = SUB_REGIONS.map((r, i) => ({
                     label: r.label,
                     verdict: r.userVerdict || r.aiVerdict
@@ -1026,7 +1041,7 @@
                 const resp = await fetch(API_BASE + '/upload/save_result', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ results, image: state.croppedDataURL })
+                    body: JSON.stringify({ results, image: compressed })
                 });
                 if (resp.ok) {
                     const d = await resp.json();

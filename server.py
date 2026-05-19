@@ -253,14 +253,15 @@ class Handler(BaseHTTPRequestHandler):
                     ('bottom_chip', [0.18, 0.81, 0.60, 0.95])
                 ]
                 ts = datetime.now().strftime('%Y%m%d_%H%M%S')
+                uid = str(int(time.time() * 1e6))[-6:]
                 saved = []
                 for i, (label, box) in enumerate(regions):
                     verdict = results[i]['verdict'] if i < len(results) else 'good'
-                    folder = os.path.join(SAVE_DIR, label)
+                    folder = os.path.join(SAVE_DIR, label, verdict)
                     os.makedirs(folder, exist_ok=True)
                     x1, y1, x2, y2 = [int(v) for v in [box[0]*W, box[1]*H, box[2]*W, box[3]*H]]
                     sub = img.crop((x1, y1, x2, y2))
-                    fname = f'{ts}_{verdict}.png'
+                    fname = f'{ts}_{uid}.png'
                     sub.save(os.path.join(folder, fname))
                     saved.append({'label': label, 'verdict': verdict, 'file': fname})
                 self.send_json(200, {'ok': True, 'saved': saved})
