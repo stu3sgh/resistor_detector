@@ -1,0 +1,4 @@
+*.bak
+server.log
+__pycache__/
+uploads/
