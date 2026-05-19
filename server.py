@@ -89,63 +89,81 @@ class SMDClassifier:
 
 
 # ============ HOG+SVM Classifier (方案二) ============
-class HOGSVMClassifier:
-    """委托给 pcb_resistor_checker 的 HOG+Linear SVM 分类器"""
+class HOGSVMClassifierV2:
+    """V2 多区域 HOG+SVM 分类器（支持 smd_components / main_chip / bottom_chip）"""
     def __init__(self):
+        import cv2
+        import importlib
         checker_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'pcb_resistor_checker')
         sys.path.insert(0, checker_dir)
-        import importlib
-        self._mod = importlib.import_module('detect_resistor_presence')
+
+        self._cv2 = cv2
         self._roi_common = importlib.import_module('roi_classifier_common')
         self._roi_hog = importlib.import_module('roi_classifier_hog_svm')
+        self._detect_mod = importlib.import_module('detect_resistor_presence')
+        self._v2_mod = importlib.import_module('infer_multi_region_hog_svm_v2')
 
+        models_root = os.path.join(checker_dir, 'models')
         config_path = os.path.join(checker_dir, 'config.yaml')
-        model_dir = os.path.join(checker_dir, 'models', 'hog_svm_v1')
 
         from pathlib import Path
-        self._config = self._mod.load_config(Path(config_path))
-        self._template_state = self._mod.load_template_state(self._config, Path(config_path))
-        self._svm, self._feature_config, self._metadata = self._roi_hog.load_model_bundle(Path(model_dir))
-        print(f"[hog_svm] Model loaded: {self._metadata.get('model_type')}")
+        models_path = Path(models_root)
+        self._config = self._detect_mod.load_config(Path(config_path))
+        self._template_state = self._detect_mod.load_template_state(self._config, Path(config_path))
 
-    def predict(self, img_bytes):
-        """输入: PNG bytes (子图或完整图)"""
-        import cv2
+        # 加载三个区域的模型
+        smd_dir = self._v2_mod.find_latest_versioned_model_dir(models_path, "hog_svm")
+        main_dir = self._v2_mod.find_latest_versioned_model_dir(models_path, "main_chip_hog_svm")
+        bottom_dir = self._v2_mod.find_latest_versioned_model_dir(models_path, "bottom_chip_hog_svm")
+
+        self._smd_svm, self._smd_feat, self._smd_meta = self._roi_hog.load_model_bundle(smd_dir)
+        self._main_svm, self._main_feat, self._main_meta = self._roi_hog.load_model_bundle(main_dir)
+        self._bottom_svm, self._bottom_feat, self._bottom_meta = self._roi_hog.load_model_bundle(bottom_dir)
+
+        print(f"[hog_svm_v2] Models loaded: smd={smd_dir.name}, main={main_dir.name}, bottom={bottom_dir.name}")
+
+    def classify_region(self, region_name, img_bytes):
+        """对单个子图做 HOG+SVM 分类（用于 main_chip / bottom_chip）"""
         import tempfile
-        # 写临时文件用于 localize
         with tempfile.NamedTemporaryFile(suffix='.png', delete=False) as tmp:
             tmp.write(img_bytes)
             tmp_path = tmp.name
         try:
             from pathlib import Path
-            localized, payload = self._roi_common.localize_detect_roi(
-                Path(tmp_path), self._config, self._template_state
+            return self._v2_mod.classify_direct_region(
+                region_name, Path(tmp_path),
+                self._main_svm if region_name == 'main_chip' else self._bottom_svm,
+                self._main_feat if region_name == 'main_chip' else self._bottom_feat,
+                self._main_meta if region_name == 'main_chip' else self._bottom_meta,
             )
-            if localized is None:
-                return 1, 0.0, {
-                    "reason": "localization_failed",
-                    "localization_reason": payload.get("reason", "unknown"),
-                    "scheme": "hog_svm"
-                }
-            masked_roi = self._roi_common.mask_roi_crop(localized.roi_crop_bgr, localized.roi_mask)
-            features = self._roi_hog.compute_hog_features(masked_roi, self._feature_config).reshape(1, -1)
-            predicted_ids, raw_scores = self._roi_hog.predict_label_ids(self._svm, features)
-            predicted_label = self._roi_hog.decode_label(int(predicted_ids[0]))
-            pred = 0 if predicted_label == 'good' else 1
-            confidence = min(abs(float(raw_scores[0])) / 2.0, 1.0)
-            details = {
-                "reason": "hog_linear_svm",
-                "svm_margin": round(abs(float(raw_scores[0])), 6),
-                "total_good_matches": localized.total_good_matches,
-                "inlier_count": localized.inlier_count,
-                "scheme": "hog_svm"
-            }
-            return pred, confidence, details
         finally:
             os.unlink(tmp_path)
 
+    def classify_smd(self, img_bytes):
+        """对 SMD 子图做 ORB 配准 + HOG+SVM 分类"""
+        import tempfile
+        with tempfile.NamedTemporaryFile(suffix='.png', delete=False) as tmp:
+            tmp.write(img_bytes)
+            tmp_path = tmp.name
+        try:
+            from pathlib import Path
+            return self._v2_mod.classify_smd_region(
+                Path(tmp_path), self._config, self._template_state,
+                self._smd_svm, self._smd_feat, self._smd_meta,
+            )
+        finally:
+            os.unlink(tmp_path)
+
+    def predict(self, img_bytes):
+        """兼容接口：返回 (pred, confidence, details)，用 SMD 区域的结果"""
+        result = self.classify_smd(img_bytes)
+        pred = 0 if result['result'] == 'good' else 1
+        margin = result.get('svm_margin_abs', 0)
+        confidence = min(margin / 1.5, 1.0) if margin else 0.5
+        return pred, confidence, result
+
     def reload(self):
-        pass  # HOG+SVM 模型是静态的
+        pass
 
     @property
     def labels(self):
@@ -160,7 +178,7 @@ def get_classifier():
     if scheme == '2':
         global classifier_v2
         if classifier_v2 is None:
-            classifier_v2 = HOGSVMClassifier()
+            classifier_v2 = HOGSVMClassifierV2()
         return classifier_v2, '2'
     return classifier_v1, '1'
 
@@ -284,7 +302,26 @@ class Handler(BaseHTTPRequestHandler):
                 t1 = time.time()
                 clf, scheme = get_classifier()
                 t2 = time.time()
-                pred, conf, details = clf.predict(img_bytes)
+                region_name = data.get('region', 'smd_components')
+
+                # 方案二: 根据区域选择分类方式
+                if scheme == '2' and hasattr(clf, 'classify_region'):
+                    import cv2 as cv2_mod
+                    from pathlib import Path
+                    import tempfile
+                    if region_name == 'smd_components':
+                        r = clf.classify_smd(img_bytes)
+                    else:
+                        r = clf.classify_region(region_name, img_bytes)
+                    pred = 0 if r['result'] == 'good' else 1
+                    margin = r.get('svm_margin_abs', 0)
+                    conf = min(margin / 1.5, 1.0) if margin else 0.5
+                    details = {k: v for k, v in r.items() if k != 'result'}
+                    details['scheme'] = 'hog_svm_v2'
+                else:
+                    pred, conf, details = clf.predict(img_bytes)
+                    details['scheme'] = scheme
+
                 t3 = time.time()
                 details["_timing"] = {
                     "decode_ms": round((t1-t0)*1000),
@@ -292,7 +329,7 @@ class Handler(BaseHTTPRequestHandler):
                     "predict_ms": round((t3-t2)*1000),
                     "total_ms": round((t3-t0)*1000)
                 }
-                print(f"[classify] scheme={scheme} decode={(t1-t0)*1000:.0f}ms clf={(t2-t1)*1000:.0f}ms predict={(t3-t2)*1000:.0f}ms total={(t3-t0)*1000:.0f}ms")
+                print(f"[classify] scheme={scheme} region={region_name} decode={(t1-t0)*1000:.0f}ms clf={(t2-t1)*1000:.0f}ms predict={(t3-t2)*1000:.0f}ms total={(t3-t0)*1000:.0f}ms")
                 self.send_json(200, {
                     "result": "good" if pred == 0 else "bad",
                     "confidence": round(conf, 4),

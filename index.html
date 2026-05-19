@@ -829,24 +829,26 @@
             img.onload = async () => {
                 const W = img.naturalWidth, H = img.naturalHeight;
 
-                // Call classifier for SMD region (idx=0)
-                let smdVerdict = null;
+                // Call classifier for ALL regions
+                const aiVerdicts = [null, null, null];
                 try {
-                    const [x1, y1, x2, y2] = SUB_REGIONS[0].box;
-                    const sx = Math.round(x1*W), sy = Math.round(y1*H);
-                    const sw = Math.round((x2-x1)*W), sh = Math.round((y2-y1)*H);
-                    const cv = document.createElement('canvas');
-                    cv.width = sw; cv.height = sh;
-                    cv.getContext('2d').drawImage(img, sx, sy, sw, sh, 0, 0, sw, sh);
-                    const subDataURL = cv.toDataURL('image/png');
-                    const cResp = await fetch(API_BASE + '/classify', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ image: subDataURL })
-                    });
-                    if (cResp.ok) {
-                        const cData = await cResp.json();
-                        smdVerdict = cData.result;
+                    for (let i = 0; i < SUB_REGIONS.length; i++) {
+                        const [x1, y1, x2, y2] = SUB_REGIONS[i].box;
+                        const sx = Math.round(x1*W), sy = Math.round(y1*H);
+                        const sw = Math.round((x2-x1)*W), sh = Math.round((y2-y1)*H);
+                        const cv = document.createElement('canvas');
+                        cv.width = sw; cv.height = sh;
+                        cv.getContext('2d').drawImage(img, sx, sy, sw, sh, 0, 0, sw, sh);
+                        const subDataURL = cv.toDataURL('image/png');
+                        const cResp = await fetch(API_BASE + '/classify', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ image: subDataURL, region: SUB_REGIONS[i].label })
+                        });
+                        if (cResp.ok) {
+                            const cData = await cResp.json();
+                            aiVerdicts[i] = cData.result;
+                        }
                     }
                 } catch (e) {
                     console.log('Classifier unavailable:', e);
@@ -866,13 +868,10 @@
 
                     // Determine AI verdict
                     let aiVerdict;
-                    if (idx === 0 && smdVerdict) {
-                        aiVerdict = smdVerdict;
+                    if (aiVerdicts[idx]) {
+                        aiVerdict = aiVerdicts[idx];
                     } else {
-                        const isDefect = (data.predictions || []).some(p =>
-                            p.class && (p.class.includes('缺陷') || p.class.includes('异常'))
-                        );
-                        aiVerdict = isDefect ? 'bad' : 'good';
+                        aiVerdict = 'good';
                     }
                     region.aiVerdict = aiVerdict;
                     region.userVerdict = null;
