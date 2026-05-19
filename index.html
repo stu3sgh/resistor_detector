@@ -739,6 +739,20 @@
             img.onload = () => {
                 state.imgWidth = img.naturalWidth;
                 state.imgHeight = img.naturalHeight;
+                // 自动压缩：宽度超过3000px时等比缩放（保留约3MB级别画质）
+                if (img.naturalWidth > 3000) {
+                    const scale = 3000 / img.naturalWidth;
+                    const cv = document.createElement('canvas');
+                    cv.width = 3000;
+                    cv.height = Math.round(img.naturalHeight * scale);
+                    cv.getContext('2d').drawImage(img, 0, 0, cv.width, cv.height);
+                    state.currentSrc = cv.toDataURL('image/jpeg', 0.85);
+                    state.imgWidth = cv.width;
+                    state.imgHeight = cv.height;
+                    img.src = state.currentSrc;
+                    showToast(`📐 自动压缩至 ${cv.width}×${cv.height}`);
+                    return;
+                }
                 showSection('scan');
                 requestAnimationFrame(() => { updateFrame(); fitImage(); });
             };
