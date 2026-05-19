@@ -50,7 +50,24 @@ def save_meta(meta):
         json.dump(meta, f, ensure_ascii=False, indent=2)
 
 
-# ============ SMD Classifier ============
+# ============ 分类方案管理 ============
+# 方案一: KNN (classifiers/knn_classifier.py)
+# 方案二: HOG+SVM (pcb_resistor_checker/)
+
+SCHEME_FILE = os.path.join(BASE_DIR, 'current_scheme.txt')
+
+def get_current_scheme():
+    if os.path.exists(SCHEME_FILE):
+        with open(SCHEME_FILE, 'r') as f:
+            return f.read().strip()
+    return '1'
+
+def set_scheme(scheme):
+    with open(SCHEME_FILE, 'w') as f:
+        f.write(scheme.strip())
+
+
+# ============ SMD Classifier (方案一: KNN) ============
 class SMDClassifier:
     """兼容 wrapper — 委托给 classifiers/knn_classifier.py"""
     def __init__(self, data_dir):
@@ -66,8 +83,86 @@ class SMDClassifier:
     def reload(self):
         self._clf.reload()
 
+    @property
+    def labels(self):
+        return self._clf.labels
 
-classifier = SMDClassifier(DATA_DIR)
+
+# ============ HOG+SVM Classifier (方案二) ============
+class HOGSVMClassifier:
+    """委托给 pcb_resistor_checker 的 HOG+Linear SVM 分类器"""
+    def __init__(self):
+        checker_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'pcb_resistor_checker')
+        sys.path.insert(0, checker_dir)
+        import importlib
+        self._mod = importlib.import_module('detect_resistor_presence')
+        self._roi_common = importlib.import_module('roi_classifier_common')
+        self._roi_hog = importlib.import_module('roi_classifier_hog_svm')
+
+        config_path = os.path.join(checker_dir, 'config.yaml')
+        model_dir = os.path.join(checker_dir, 'models', 'hog_svm_v1')
+
+        from pathlib import Path
+        self._config = self._mod.load_config(Path(config_path))
+        self._template_state = self._mod.load_template_state(self._config, Path(config_path))
+        self._svm, self._feature_config, self._metadata = self._roi_hog.load_model_bundle(Path(model_dir))
+        print(f"[hog_svm] Model loaded: {self._metadata.get('model_type')}")
+
+    def predict(self, img_bytes):
+        """输入: PNG bytes (子图或完整图)"""
+        import cv2
+        import tempfile
+        # 写临时文件用于 localize
+        with tempfile.NamedTemporaryFile(suffix='.png', delete=False) as tmp:
+            tmp.write(img_bytes)
+            tmp_path = tmp.name
+        try:
+            from pathlib import Path
+            localized, payload = self._roi_common.localize_detect_roi(
+                Path(tmp_path), self._config, self._template_state
+            )
+            if localized is None:
+                return 1, 0.0, {
+                    "reason": "localization_failed",
+                    "localization_reason": payload.get("reason", "unknown"),
+                    "scheme": "hog_svm"
+                }
+            masked_roi = self._roi_common.mask_roi_crop(localized.roi_crop_bgr, localized.roi_mask)
+            features = self._roi_hog.compute_hog_features(masked_roi, self._feature_config).reshape(1, -1)
+            predicted_ids, raw_scores = self._roi_hog.predict_label_ids(self._svm, features)
+            predicted_label = self._roi_hog.decode_label(int(predicted_ids[0]))
+            pred = 0 if predicted_label == 'good' else 1
+            confidence = min(abs(float(raw_scores[0])) / 2.0, 1.0)
+            details = {
+                "reason": "hog_linear_svm",
+                "svm_margin": round(abs(float(raw_scores[0])), 6),
+                "total_good_matches": localized.total_good_matches,
+                "inlier_count": localized.inlier_count,
+                "scheme": "hog_svm"
+            }
+            return pred, confidence, details
+        finally:
+            os.unlink(tmp_path)
+
+    def reload(self):
+        pass  # HOG+SVM 模型是静态的
+
+    @property
+    def labels(self):
+        return np.array([])
+
+
+classifier_v1 = SMDClassifier(DATA_DIR)
+classifier_v2 = None  # 延迟加载
+
+def get_classifier():
+    scheme = get_current_scheme()
+    if scheme == '2':
+        global classifier_v2
+        if classifier_v2 is None:
+            classifier_v2 = HOGSVMClassifier()
+        return classifier_v2, '2'
+    return classifier_v1, '1'
 
 
 # ============ HTTP Handler ============
@@ -134,9 +229,12 @@ class Handler(BaseHTTPRequestHandler):
         # --- /upload/save_result ---
         elif path == '/upload/save_result':
             content_length = int(self.headers.get('Content-Length', 0))
+            t0 = time.time()
             body = self.rfile.read(content_length)
+            t1 = time.time()
             try:
                 data = json.loads(body)
+                t2 = time.time()
                 image_data_url = data.get('image', '')
                 results = data.get('results', [])
                 if not image_data_url.startswith('data:'):
@@ -144,6 +242,7 @@ class Handler(BaseHTTPRequestHandler):
                     return
                 header, b64 = image_data_url.split(',', 1)
                 img_bytes = base64.b64decode(b64)
+                t3 = time.time()
                 img = Image.open(io.BytesIO(img_bytes))
                 W, H = img.size
                 regions = [
@@ -163,6 +262,8 @@ class Handler(BaseHTTPRequestHandler):
                     fname = f'{ts}_{uid}.png'
                     sub.save(os.path.join(folder, fname))
                     saved.append({'label': label, 'verdict': verdict, 'file': fname})
+                t4 = time.time()
+                print(f"[save_result] read={(t1-t0)*1000:.0f}ms json_parse={(t2-t1)*1000:.0f}ms decode={(t3-t2)*1000:.0f}ms crop_save={(t4-t3)*1000:.0f}ms total={(t4-t0)*1000:.0f}ms")
                 self.send_json(200, {'ok': True, 'saved': saved})
             except Exception as e:
                 self.send_json(500, {'error': str(e)})
@@ -178,11 +279,24 @@ class Handler(BaseHTTPRequestHandler):
                     self.send_json(400, {"error": "invalid image data"})
                     return
                 header, b64 = image_data.split(',', 1)
+                t0 = time.time()
                 img_bytes = base64.b64decode(b64)
-                pred, conf, details = classifier.predict(img_bytes)
+                t1 = time.time()
+                clf, scheme = get_classifier()
+                t2 = time.time()
+                pred, conf, details = clf.predict(img_bytes)
+                t3 = time.time()
+                details["_timing"] = {
+                    "decode_ms": round((t1-t0)*1000),
+                    "load_clf_ms": round((t2-t1)*1000),
+                    "predict_ms": round((t3-t2)*1000),
+                    "total_ms": round((t3-t0)*1000)
+                }
+                print(f"[classify] scheme={scheme} decode={(t1-t0)*1000:.0f}ms clf={(t2-t1)*1000:.0f}ms predict={(t3-t2)*1000:.0f}ms total={(t3-t0)*1000:.0f}ms")
                 self.send_json(200, {
                     "result": "good" if pred == 0 else "bad",
                     "confidence": round(conf, 4),
+                    "scheme": scheme,
                     **details
                 })
             except Exception as e:
@@ -190,8 +304,28 @@ class Handler(BaseHTTPRequestHandler):
 
         # --- /classify/reload ---
         elif path == '/classify/reload':
-            classifier.reload()
-            self.send_json(200, {"ok": True, "samples": len(classifier.labels)})
+            clf, scheme = get_classifier()
+            clf.reload()
+            n_samples = len(clf.labels) if len(clf.labels) > 0 else '?'
+            self.send_json(200, {"ok": True, "scheme": scheme, "samples": n_samples})
+
+        # --- /classify/scheme --- 切换分类方案
+        elif path == '/classify/scheme':
+            length = int(self.headers.get('Content-Length', 0))
+            body = self.rfile.read(length)
+            try:
+                data = json.loads(body)
+                new_scheme = str(data.get('scheme', '1'))
+                if new_scheme not in ('1', '2'):
+                    self.send_json(400, {"error": "scheme must be 1 or 2"})
+                    return
+                set_scheme(new_scheme)
+                # 如果切到方案二，预加载
+                if new_scheme == '2':
+                    get_classifier()
+                self.send_json(200, {"ok": True, "scheme": new_scheme})
+            except Exception as e:
+                self.send_json(500, {"error": str(e)})
 
         else:
             self.send_json(404, {'error': 'not found'})
@@ -232,11 +366,14 @@ class Handler(BaseHTTPRequestHandler):
 
         # --- /classify (status) ---
         elif path == '/classify':
+            clf, scheme = get_classifier()
+            labels = clf.labels
             self.send_json(200, {
                 "status": "ready",
-                "samples": len(classifier.labels),
-                "good": int((classifier.labels==0).sum()),
-                "bad": int((classifier.labels==1).sum())
+                "scheme": scheme,
+                "samples": len(labels),
+                "good": int((labels == 0).sum()) if len(labels) > 0 else '?',
+                "bad": int((labels == 1).sum()) if len(labels) > 0 else '?'
             })
 
         else:
