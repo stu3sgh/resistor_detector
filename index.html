@@ -761,9 +761,9 @@
 
         // ============ Sub-region config (normalized 0~1: x1, y1, x2, y2) ============
         const SUB_REGIONS = [
-            { label: '贴片元件区', box: [0.01, 0.01, 0.51, 0.14], aiVerdict: 'good' },
-            { label: '主控芯片 (ARM)', box: [0.21, 0.54, 0.74, 0.77], aiVerdict: 'good' },
-            { label: '底部芯片', box: [0.18, 0.81, 0.60, 0.95], aiVerdict: 'good' }
+            { label: '贴片元件区', box: [0.01, 0.01, 0.51, 0.14], aiVerdict: 'good', goodHint: '电阻没有焊上', badHint: '电阻已焊上' },
+            { label: '主控芯片 (ARM)', box: [0.21, 0.54, 0.74, 0.77], aiVerdict: 'good', goodHint: '有完整的胶水', badHint: '胶水不完整' },
+            { label: '底部芯片', box: [0.18, 0.81, 0.60, 0.95], aiVerdict: 'good', goodHint: '有完整的胶水', badHint: '胶水不完整' }
         ];
 
         // ============ API ============
@@ -884,8 +884,8 @@
                             <div class="sub-region-label">${region.label}</div>
                             <div style="font-size:11px;color:var(--text-secondary)">区域 ${idx+1} · ${sw}×${sh}px</div>
                             <div class="sub-region-btns">
-                                <div class="sub-btn ${aiVerdict==='good'?'active-good':''}" data-idx="${idx}" data-verdict="good">✅ 良品</div>
-                                <div class="sub-btn ${aiVerdict==='bad'?'active-bad':''}" data-idx="${idx}" data-verdict="bad">❌ 不良</div>
+                                <div class="sub-btn ${aiVerdict==='good'?'active-good':''}" data-idx="${idx}" data-verdict="good">✅ 良品<br><span style="font-size:10px;opacity:0.8">${region.goodHint||''}</span></div>
+                                <div class="sub-btn ${aiVerdict==='bad'?'active-bad':''}" data-idx="${idx}" data-verdict="bad">❌ 不良<br><span style="font-size:10px;opacity:0.8">${region.badHint||''}</span></div>
                             </div>
                             <div class="sub-region-ai-hint" id="hint-${idx}">AI 判断：${aiVerdict==='good'?'良品':'不良'}（可点击上方按钮修改）</div>
                         </div>`;
