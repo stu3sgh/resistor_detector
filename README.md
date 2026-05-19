@@ -10,13 +10,27 @@
 
 ## 数据集
 
-`detection_results/` 目录包含标注的子图数据集：
+`detection_results/` 目录包含标注的子图数据集，每个区域按 `good/` 和 `bad/` 子目录分类：
+
+```
+detection_results/
+├── smd_components/      # SMD 元件外观检测
+│   ├── good/             # 良品样本
+│   └── bad/              # 不良品样本
+├── main_chip/            # 主芯片焊点检测
+│   ├── good/
+│   └── bad/
+└── bottom_chip/          # 底部芯片引脚检测
+    ├── good/
+    └── bad/
+```
 
 | 区域 | good | bad | 用途 |
 |------|------|-----|------|
-| smd_components | SMD元件 | 外观检测 |
-| main_chip | 主芯片 | 焊点检测 |
-| bottom_chip | 底部芯片 | 引脚检测 |
+| smd_components | 10 | 11 | SMD元件外观检测 |
+| main_chip | 4 | 17 | 主芯片焊点检测 |
+| bottom_chip | 4 | 17 | 底部芯片引脚检测 |
+| **合计** | **18** | **45** | |
 
 ## 分类器接口规范（Classifier API Spec）
 

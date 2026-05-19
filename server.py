@@ -61,14 +61,27 @@ class SMDClassifier:
     def load_data(self):
         if not os.path.exists(self.data_dir):
             return
-        for f in sorted(os.listdir(self.data_dir)):
-            if not f.endswith('.png'):
-                continue
-            path = os.path.join(self.data_dir, f)
-            feat = self._extract_features(path)
-            label = 0 if 'good' in f else 1
-            self.features.append(feat)
-            self.labels.append(label)
+        # 支持 good/bad 子目录结构，同时兼容旧的扁平结构
+        good_dir = os.path.join(self.data_dir, 'good')
+        bad_dir = os.path.join(self.data_dir, 'bad')
+
+        if os.path.isdir(good_dir) and os.path.isdir(bad_dir):
+            for f in sorted(os.listdir(good_dir)):
+                if f.endswith('.png'):
+                    self.features.append(self._extract_features(os.path.join(good_dir, f)))
+                    self.labels.append(0)
+            for f in sorted(os.listdir(bad_dir)):
+                if f.endswith('.png'):
+                    self.features.append(self._extract_features(os.path.join(bad_dir, f)))
+                    self.labels.append(1)
+        else:
+            for f in sorted(os.listdir(self.data_dir)):
+                if not f.endswith('.png'):
+                    continue
+                path = os.path.join(self.data_dir, f)
+                self.features.append(self._extract_features(path))
+                self.labels.append(0 if 'good' in f else 1)
+
         self.features = np.array(self.features) if self.features else np.array([])
         self.labels = np.array(self.labels) if self.labels else np.array([])
         print(f"[classifier] Loaded {len(self.labels)} samples: "
