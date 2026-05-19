@@ -761,9 +761,9 @@
 
         // ============ Sub-region config (normalized 0~1: x1, y1, x2, y2) ============
         const SUB_REGIONS = [
-            { label: '贴片元件区', box: [0.01, 0.01, 0.51, 0.14], aiVerdict: 'good', goodHint: '电阻没有焊上', badHint: '电阻已焊上' },
-            { label: '主控芯片 (ARM)', box: [0.21, 0.54, 0.74, 0.77], aiVerdict: 'good', goodHint: '有完整的胶水', badHint: '没有胶水或胶水被破坏' },
-            { label: '底部芯片', box: [0.18, 0.81, 0.60, 0.95], aiVerdict: 'good', goodHint: '有完整的胶水', badHint: '没有胶水或胶水被破坏' }
+            { id: 'smd_components', label: '贴片元件区', box: [0.01, 0.01, 0.51, 0.14], aiVerdict: 'good', goodHint: '电阻没有焊上', badHint: '电阻已焊上' },
+            { id: 'main_chip', label: '主控芯片 (ARM)', box: [0.21, 0.54, 0.74, 0.77], aiVerdict: 'good', goodHint: '有完整的胶水', badHint: '没有胶水或胶水被破坏' },
+            { id: 'bottom_chip', label: '底部芯片', box: [0.18, 0.81, 0.60, 0.95], aiVerdict: 'good', goodHint: '有完整的胶水', badHint: '没有胶水或胶水被破坏' }
         ];
 
         // ============ API ============
@@ -843,7 +843,7 @@
                         const cResp = await fetch(API_BASE + '/classify', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ image: subDataURL, region: SUB_REGIONS[i].label })
+                            body: JSON.stringify({ image: subDataURL, region: SUB_REGIONS[i].id })
                         });
                         if (cResp.ok) {
                             const cData = await cResp.json();
