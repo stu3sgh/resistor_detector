@@ -34,10 +34,11 @@ class DatasetItem:
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Train a simple HOG + linear SVM classifier on extracted detect_roi crops."
+        description="Train a HOG + linear SVM classifier on any region dataset organized as good/ and bad/."
     )
     parser.add_argument("--dataset-root", required=True, help="Dataset root containing good/ and bad/ folders")
     parser.add_argument("--output-dir", required=True, help="Directory to save trained model artifacts")
+    parser.add_argument("--region-name", default="region", help="Logical region name for metadata only")
     parser.add_argument("--labels", nargs="+", default=["good", "bad"], help="Label folder names")
     parser.add_argument("--patterns", nargs="+", default=list(DEFAULT_IMAGE_PATTERNS), help="Image glob patterns")
     parser.add_argument("--seed", type=int, default=42, help="Random seed")
@@ -51,6 +52,12 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--bins", type=int, default=9, help="HOG orientation bins")
     parser.add_argument("--svm-c", type=float, default=1.0, help="Linear SVM C value")
     parser.add_argument("--no-equalize-hist", action="store_true", help="Disable histogram equalization before HOG")
+    parser.add_argument(
+        "--balance",
+        choices=["none", "oversample"],
+        default="none",
+        help="Optional class balancing strategy applied to training folds and the final fitted model.",
+    )
     return parser.parse_args()
 
 
@@ -73,6 +80,30 @@ def group_items_by_label(items: list[DatasetItem]) -> dict[str, list[DatasetItem
     for item in items:
         grouped.setdefault(item.label, []).append(item)
     return grouped
+
+
+def balance_training_items(items: list[DatasetItem], strategy: str, seed: int) -> list[DatasetItem]:
+    if strategy == "none":
+        return list(items)
+
+    grouped = group_items_by_label(items)
+    if not grouped:
+        return []
+
+    max_count = max(len(group) for group in grouped.values())
+    rng = random.Random(seed)
+    balanced_items: list[DatasetItem] = []
+    for label in sorted(grouped):
+        label_items = list(grouped[label])
+        if not label_items:
+            continue
+        expanded = list(label_items)
+        while len(expanded) < max_count:
+            expanded.append(rng.choice(label_items))
+        balanced_items.extend(expanded)
+
+    rng.shuffle(balanced_items)
+    return balanced_items
 
 
 def build_stratified_folds(items: list[DatasetItem], folds: int, seed: int) -> list[list[DatasetItem]]:
@@ -166,12 +197,17 @@ def evaluate_split(
     train_items: list[DatasetItem],
     val_items: list[DatasetItem],
     feature_config: HogFeatureConfig,
+    *,
+    balance_strategy: str,
+    seed: int,
 ) -> dict[str, Any]:
-    train_images = load_images(train_items)
+    effective_train_items = balance_training_items(train_items, balance_strategy, seed)
+
+    train_images = load_images(effective_train_items)
     val_images = load_images(val_items)
 
     train_features = build_feature_matrix(train_images, feature_config)
-    train_labels = np.array([encode_label(item.label) for item in train_items], dtype=np.int32)
+    train_labels = np.array([encode_label(item.label) for item in effective_train_items], dtype=np.int32)
     svm = train_linear_svm(train_features, train_labels, feature_config.svm_c)
 
     val_features = build_feature_matrix(val_images, feature_config)
@@ -188,14 +224,17 @@ def evaluate_split(
         }
         for item, pred_label in zip(val_items, pred_labels)
     ]
+    evaluation["train_sample_count_before_balance"] = len(train_items)
+    evaluation["train_sample_count_after_balance"] = len(effective_train_items)
     return evaluation
 
 
-def build_final_model(items: list[DatasetItem], feature_config: HogFeatureConfig) -> Any:
-    images = load_images(items)
+def build_final_model(items: list[DatasetItem], feature_config: HogFeatureConfig, balance_strategy: str, seed: int) -> tuple[Any, list[DatasetItem]]:
+    effective_items = balance_training_items(items, balance_strategy, seed)
+    images = load_images(effective_items)
     features = build_feature_matrix(images, feature_config)
-    labels = np.array([encode_label(item.label) for item in items], dtype=np.int32)
-    return train_linear_svm(features, labels, feature_config.svm_c)
+    labels = np.array([encode_label(item.label) for item in effective_items], dtype=np.int32)
+    return train_linear_svm(features, labels, feature_config.svm_c), effective_items
 
 
 def aggregate_fold_metrics(fold_summaries: list[dict[str, Any]]) -> dict[str, Any]:
@@ -239,7 +278,13 @@ def main() -> int:
         for fold_index in range(args.folds):
             val_items = list(folds[fold_index])
             train_items = [item for index, fold in enumerate(folds) if index != fold_index for item in fold]
-            fold_result = evaluate_split(train_items, val_items, feature_config)
+            fold_result = evaluate_split(
+                train_items,
+                val_items,
+                feature_config,
+                balance_strategy=args.balance,
+                seed=args.seed + fold_index,
+            )
             fold_result["fold_index"] = fold_index
             fold_summaries.append(fold_result)
             print(
@@ -255,7 +300,13 @@ def main() -> int:
         }
     else:
         train_items, val_items = stratified_holdout_split(items, args.val_ratio, args.seed)
-        holdout_result = evaluate_split(train_items, val_items, feature_config)
+        holdout_result = evaluate_split(
+            train_items,
+            val_items,
+            feature_config,
+            balance_strategy=args.balance,
+            seed=args.seed,
+        )
         evaluation_summary = {
             "mode": "holdout",
             "val_ratio": args.val_ratio,
@@ -267,10 +318,14 @@ def main() -> int:
             f"precision_bad={holdout_result['metrics']['precision_bad']:.4f}"
         )
 
-    svm = build_final_model(items, feature_config)
+    svm, effective_items = build_final_model(items, feature_config, args.balance, args.seed)
+    effective_label_counts = {label: len(group) for label, group in group_items_by_label(effective_items).items()}
     training_summary = {
+        "region_name": args.region_name,
         "dataset_root": str(dataset_root),
         "label_counts": label_counts,
+        "effective_label_counts": effective_label_counts,
+        "balance_strategy": args.balance,
         "sample_count": len(items),
         "samples": [{"image": str(item.image_path), "label": item.label} for item in items],
         "evaluation": evaluation_summary,
