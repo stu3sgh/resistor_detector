@@ -229,9 +229,12 @@ class Handler(BaseHTTPRequestHandler):
         # --- /upload/save_result ---
         elif path == '/upload/save_result':
             content_length = int(self.headers.get('Content-Length', 0))
+            t0 = time.time()
             body = self.rfile.read(content_length)
+            t1 = time.time()
             try:
                 data = json.loads(body)
+                t2 = time.time()
                 image_data_url = data.get('image', '')
                 results = data.get('results', [])
                 if not image_data_url.startswith('data:'):
@@ -239,6 +242,7 @@ class Handler(BaseHTTPRequestHandler):
                     return
                 header, b64 = image_data_url.split(',', 1)
                 img_bytes = base64.b64decode(b64)
+                t3 = time.time()
                 img = Image.open(io.BytesIO(img_bytes))
                 W, H = img.size
                 regions = [
@@ -258,6 +262,8 @@ class Handler(BaseHTTPRequestHandler):
                     fname = f'{ts}_{uid}.png'
                     sub.save(os.path.join(folder, fname))
                     saved.append({'label': label, 'verdict': verdict, 'file': fname})
+                t4 = time.time()
+                print(f"[save_result] read={(t1-t0)*1000:.0f}ms json_parse={(t2-t1)*1000:.0f}ms decode={(t3-t2)*1000:.0f}ms crop_save={(t4-t3)*1000:.0f}ms total={(t4-t0)*1000:.0f}ms")
                 self.send_json(200, {'ok': True, 'saved': saved})
             except Exception as e:
                 self.send_json(500, {'error': str(e)})
@@ -273,9 +279,20 @@ class Handler(BaseHTTPRequestHandler):
                     self.send_json(400, {"error": "invalid image data"})
                     return
                 header, b64 = image_data.split(',', 1)
+                t0 = time.time()
                 img_bytes = base64.b64decode(b64)
+                t1 = time.time()
                 clf, scheme = get_classifier()
+                t2 = time.time()
                 pred, conf, details = clf.predict(img_bytes)
+                t3 = time.time()
+                details["_timing"] = {
+                    "decode_ms": round((t1-t0)*1000),
+                    "load_clf_ms": round((t2-t1)*1000),
+                    "predict_ms": round((t3-t2)*1000),
+                    "total_ms": round((t3-t0)*1000)
+                }
+                print(f"[classify] scheme={scheme} decode={(t1-t0)*1000:.0f}ms clf={(t2-t1)*1000:.0f}ms predict={(t3-t2)*1000:.0f}ms total={(t3-t0)*1000:.0f}ms")
                 self.send_json(200, {
                     "result": "good" if pred == 0 else "bad",
                     "confidence": round(conf, 4),
