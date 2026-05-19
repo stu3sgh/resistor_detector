@@ -282,7 +282,7 @@ class Handler(BaseHTTPRequestHandler):
                 img_bytes = base64.b64decode(b64)
                 pred, conf, details = classifier.predict(img_bytes)
                 self.send_json(200, {
-                    "verdict": "good" if pred == 0 else "bad",
+                    "result": "good" if pred == 0 else "bad",
                     "confidence": round(conf, 4),
                     **details
                 })

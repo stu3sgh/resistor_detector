@@ -832,7 +832,7 @@
                     });
                     if (cResp.ok) {
                         const cData = await cResp.json();
-                        smdVerdict = cData.verdict;
+                        smdVerdict = cData.result;
                     }
                 } catch (e) {
                     console.log('Classifier unavailable:', e);
