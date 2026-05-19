@@ -1,0 +1,19 @@
+{
+  "config": "D:\\bosch_project\\workspace\\new_pcb1809\\resistor_detector\\pcb_resistor_checker\\config.yaml",
+  "input_root": "D:\\bosch_project\\workspace\\new_pcb1809\\resistor_detector\\detection_results\\smd_components",
+  "output_root": "D:\\bosch_project\\workspace\\new_pcb1809\\resistor_detector\\detection_results\\smd_components_train_v2",
+  "metadata_csv": "D:\\bosch_project\\workspace\\new_pcb1809\\resistor_detector\\detection_results\\smd_components_train_v2\\metadata.csv",
+  "labels": {
+    "good": {
+      "source_count": 25,
+      "extracted_count": 21,
+      "failed_count": 4
+    },
+    "bad": {
+      "source_count": 14,
+      "extracted_count": 13,
+      "failed_count": 1
+    }
+  },
+  "total_rows": 39
+}
