@@ -16,6 +16,7 @@
 """
 
 import os
+import sys
 import time
 import json
 import base64
@@ -51,121 +52,19 @@ def save_meta(meta):
 
 # ============ SMD Classifier ============
 class SMDClassifier:
+    """兼容 wrapper — 委托给 classifiers/knn_classifier.py"""
     def __init__(self, data_dir):
-        self.data_dir = data_dir
-        self.features = []
-        self.labels = []
-        self.k = 3
-        self.load_data()
-
-    def load_data(self):
-        if not os.path.exists(self.data_dir):
-            return
-        # 支持 good/bad 子目录结构，同时兼容旧的扁平结构
-        good_dir = os.path.join(self.data_dir, 'good')
-        bad_dir = os.path.join(self.data_dir, 'bad')
-
-        if os.path.isdir(good_dir) and os.path.isdir(bad_dir):
-            for f in sorted(os.listdir(good_dir)):
-                if f.endswith('.png'):
-                    self.features.append(self._extract_features(os.path.join(good_dir, f)))
-                    self.labels.append(0)
-            for f in sorted(os.listdir(bad_dir)):
-                if f.endswith('.png'):
-                    self.features.append(self._extract_features(os.path.join(bad_dir, f)))
-                    self.labels.append(1)
-        else:
-            for f in sorted(os.listdir(self.data_dir)):
-                if not f.endswith('.png'):
-                    continue
-                path = os.path.join(self.data_dir, f)
-                self.features.append(self._extract_features(path))
-                self.labels.append(0 if 'good' in f else 1)
-
-        self.features = np.array(self.features) if self.features else np.array([])
-        self.labels = np.array(self.labels) if self.labels else np.array([])
-        print(f"[classifier] Loaded {len(self.labels)} samples: "
-              f"{(self.labels==0).sum()} good, {(self.labels==1).sum()} bad")
-
-    def _extract_features(self, img_input):
-        if isinstance(img_input, str):
-            img = Image.open(img_input).convert('RGB')
-        elif not isinstance(img_input, Image.Image):
-            img = Image.open(io.BytesIO(img_input)).convert('RGB')
-        else:
-            img = img_input.convert('RGB')
-
-        img = img.resize((340, 215), Image.LANCZOS)
-        arr = np.array(img, dtype=float)
-        w, h = img.size
-        gray = np.mean(arr, axis=2)
-        features = []
-
-        r, g, b = arr[:,:,0], arr[:,:,1], arr[:,:,2]
-        is_pcb = (g > r) & (g > b) & (g > 60)
-        is_silver = (r > 160) & (g > 160) & (b > 160)
-        is_dark = gray < 40
-        features.extend([is_pcb.sum()/arr.size, is_silver.sum()/arr.size, is_dark.sum()/arr.size])
-
-        if is_silver.sum() > 10:
-            sp = arr[is_silver]
-            features.append(np.std(sp) / 255)
-        else:
-            features.append(0.5)
-
-        blur = np.array(img.filter(ImageFilter.GaussianBlur(radius=3)), dtype=float)
-        features.append(np.abs(arr - blur).mean() / 255)
-
-        row_means = gray.mean(axis=1)
-        features.append(np.std(row_means) / 255)
-        features.append(np.std(np.diff(row_means)) / 255)
-
-        for c_idx in range(3):
-            ch = arr[:,:,c_idx]
-            hist, _ = np.histogram(ch, bins=16, range=(0, 256))
-            features.extend((hist / hist.sum()).tolist())
-
-        for iy in range(4):
-            for ix in range(4):
-                y1, y2 = iy*h//4, (iy+1)*h//4
-                x1, x2 = ix*w//4, (ix+1)*w//4
-                features.append(gray[y1:y2, x1:x2].mean() / 255)
-
-        return np.array(features)
-
-    def _cosine_sim(self, a, b):
-        return np.dot(a, b) / (np.linalg.norm(a) * np.linalg.norm(b) + 1e-10)
+        sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), 'classifiers'))
+        from knn_classifier import KNNClassifier
+        self._clf = KNNClassifier(data_dir, k=3)
 
     def predict(self, img_input):
-        if len(self.features) < 2:
-            return 0, 0.5, {"error": "not enough training data"}
-        test_feat = self._extract_features(img_input)
-        sims = []
-        for j in range(len(self.features)):
-            cos = self._cosine_sim(test_feat, self.features[j])
-            sims.append((cos, self.labels[j]))
-        sims.sort(reverse=True)
-        topk = sims[:self.k]
-        good_sims = [s for s, l in topk if l == 0]
-        bad_sims = [s for s, l in topk if l == 1]
-        avg_good = np.mean(good_sims) if good_sims else 0
-        avg_bad = np.mean(bad_sims) if bad_sims else 0
-        pred = 1 if avg_bad > avg_good else 0
-        confidence = abs(avg_bad - avg_good) / max(avg_good, avg_bad, 0.001)
-        return pred, min(confidence, 1.0), {
-            "avg_good_sim": round(avg_good, 4),
-            "avg_bad_sim": round(avg_bad, 4),
-            "k": self.k,
-            "total_samples": len(self.labels),
-            "good_samples": int((self.labels==0).sum()),
-            "bad_samples": int((self.labels==1).sum()),
-            "top_k": [{"sim": round(s, 4), "label": int(l)} for s, l in topk]
-        }
+        r = self._clf.predict(img_input)
+        pred = 0 if r['result'] == 'good' else 1
+        return pred, r['confidence'], r['details']
 
     def reload(self):
-        self.features = []
-        self.labels = []
-        self.load_data()
+        self._clf.reload()
 
 
 classifier = SMDClassifier(DATA_DIR)
