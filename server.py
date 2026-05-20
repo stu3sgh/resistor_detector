@@ -413,6 +413,44 @@ class Handler(BaseHTTPRequestHandler):
                 "bad": int((labels == 1).sum()) if len(labels) > 0 else '?'
             })
 
+        # --- /browse?dir=xxx ---
+        elif path == '/browse':
+            qs = parse_qs(parsed.query)
+            rel_dir = qs.get('dir', [''])[0].strip('/')
+            # Security: only allow paths under SAVE_DIR
+            full_dir = os.path.normpath(os.path.join(SAVE_DIR, rel_dir))
+            if not full_dir.startswith(os.path.normpath(SAVE_DIR)):
+                self.send_json(403, {'error': '路径越界'})
+                return
+            if not os.path.isdir(full_dir):
+                self.send_json(404, {'error': '目录不存在'})
+                return
+            # List image files
+            exts = {'.png', '.jpg', '.jpeg', '.webp', '.gif'}
+            files = sorted([
+                f for f in os.listdir(full_dir)
+                if os.path.isfile(os.path.join(full_dir, f)) and os.path.splitext(f)[1].lower() in exts
+            ])
+            # Get parent dirs for breadcrumb
+            parts = rel_dir.split('/') if rel_dir else []
+            breadcrumbs = []
+            cum = ''
+            for p in parts:
+                cum = cum + '/' + p if cum else p
+                breadcrumbs.append({'name': p, 'path': cum})
+            # Check for subdirectories
+            subdirs = sorted([
+                d for d in os.listdir(full_dir)
+                if os.path.isdir(os.path.join(full_dir, d)) and not d.startswith('.')
+            ])
+            self.send_json(200, {
+                'files': files,
+                'subdirs': subdirs,
+                'breadcrumbs': breadcrumbs,
+                'current': rel_dir,
+                'base_url': '/resistor/detection_results/'
+            })
+
         else:
             self.send_json(404, {'error': 'not found'})
 
