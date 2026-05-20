@@ -1,0 +1,11 @@
+__pycache__/
+*.pyc
+*.bak
+server.log
+sync.log
+uploads/
+test_results.json
+detection_results/*/
+!detection_results/index.html
+.git-credentials
+*.log

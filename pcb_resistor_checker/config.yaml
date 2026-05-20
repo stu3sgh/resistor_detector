@@ -1,0 +1,122 @@
+# PCB 电阻存在性检测配置。
+# 主配置改成 YAML，方便直接在参数旁边写中文调参说明。
+# 浏览器标注工具保存时也会按同样的带注释 YAML 模板回写。
+
+# ORB 特征提取，用于锚点配准。
+orb:
+  # 锚点经常匹配不上时增大；运行太慢时再适当减小。
+  nfeatures: 2500
+  scaleFactor: 1.2
+  nlevels: 8
+  edgeThreshold: 31
+  fastThreshold: 12
+
+# 配准阶段阈值。
+matching:
+  # 越小越严格。好图经常报 not_enough_anchor_matches 时再略微调大。
+  ratio_test: 0.72
+  min_anchor_matches: 5
+  # 进入几何变换估计前，全部锚点累计至少要有多少个好匹配。
+  min_total_matches: 16
+  # 几何内点数门槛。只有配准基本正确但经常失败时再适当调低。
+  min_inliers: 12
+  ransac_reproj_threshold: 5.0
+  transform_type: affine_partial
+  max_matches_per_anchor: 80
+
+# 配准和 ROI 分析之前的图像预处理。
+preprocess:
+  honor_exif_orientation: true
+  # 手机图分辨率不一致时建议保持开启。会先缩放再 pad 到模板画布。
+  standardize_to_template: true
+  standardize_mode: fit_pad
+  gaussian_blur_ksize: 3
+  clahe_clip_limit: 2.0
+  clahe_tile_grid_size: 8
+
+# ROI 判定规则，以及 03_binary_mask 的黑色候选阈值。
+# paired_resistors_lr 表示左、右两组分别判定，只要有一组不合格就整图 NG。
+decision:
+  mode: paired_resistors_lr
+  # 03_binary_mask 使用的黑色阈值上限。
+  # 越大越容易把像素刷成白色黑块候选。
+  fixed_black_threshold: 80
+  min_black_threshold: 25
+  # dynamic_black_threshold 大致等于 ring_mean - local_dark_offset。
+  # 如果电阻黑体在 03_binary_mask 里太碎，就先减 5。
+  # 如果绿板、阴影、背景也被大量刷白，就先加 5。
+  local_dark_offset: 30
+  ring_margin_px: 10
+  # 03_binary_mask 的形态学清理核。越大去噪越强，但也更容易吃掉细长黑块。
+  morph_kernel: 3
+  white_v_min: 170
+  white_s_max: 70
+  dark_v_max: 80
+  green_h_min: 35
+  green_h_max: 100
+  green_s_min: 40
+  white_component_min_area: 6
+  side_split_gap_px: 2
+  # 每一侧中间区域允许暴露的白焊锡上限。
+  # 良品老是因为白焊锡过多被判 NG 时，再略微调大。
+  side_center_white_ratio_max: 0.34
+  # 每一侧中间区域允许暴露的绿板上限。
+  # 只有确认良品本来就会露出更多绿板时再调大。
+  side_center_green_ratio_max: 0.28
+  # 每一侧中间黑块至少要足够竖直细长。
+  # 越大越严格；当前加这条是为了避免 NG 某一侧被误放成 OK。
+  side_center_vertical_aspect_min: 1.5
+  # 每一侧至少要看到多少个面积足够大的白焊锡连通域。
+  side_white_big_count_min: 4
+  side_top_white_count_min: 1
+  side_bottom_white_count_min: 1
+  center_x_min_ratio: 0.35
+  center_x_max_ratio: 0.65
+  center_y_min_ratio: 0.18
+  center_y_max_ratio: 0.82
+  center_white_ratio_max: 0.16
+  white_big_count_min: 12
+  center_dark_ratio_min: 0.34
+  black_ratio_min: 0.008
+  largest_component_area_min: 15
+  bbox_width_min: 3
+  bbox_height_min: 4
+  elongation_min: 1.1
+  elongation_max: 6.0
+  fill_ratio_min: 0.2
+  contrast_component_delta_min: 20.0
+  min_pass_count: 4
+
+# 模板图，以及模板坐标系下的标注区域。
+template_image:
+  windows: template.png
+  linux: template.png
+
+# 锚点框尽量放在稳定、纹理明显、每张图都能看到的 PCB 区域上。
+anchors:
+- name: anchor_left
+  rect:
+  - 76
+  - 129
+  - 58
+  - 58
+- name: anchor_mid
+  rect:
+  - 139
+  - 102
+  - 140
+  - 31
+- name: anchor_right
+  rect:
+  - 214
+  - 138
+  - 57
+  - 57
+
+# detect_roi 同时覆盖左、右两组电阻。
+detect_roi:
+  rect:
+  - 139
+  - 135
+  - 56
+  - 57

@@ -1,0 +1,75 @@
+{
+  "smd_components": {
+    "region": "smd_components",
+    "image": "D:\\bosch_project\\workspace\\new_PCB_nan\\resistor_detector\\detection_results\\smd_components\\good\\20260519_131630_695743.png",
+    "result": "bad",
+    "reason": "hog_linear_svm",
+    "localization_ok": true,
+    "model_type": "opencv_hog_linear_svm",
+    "total_good_matches": 27,
+    "inlier_count": 16,
+    "anchor_stats": [
+      {
+        "anchor_name": "anchor_left",
+        "template_keypoints": 256,
+        "good_matches": 3,
+        "match_ok": false
+      },
+      {
+        "anchor_name": "anchor_mid",
+        "template_keypoints": 494,
+        "good_matches": 16,
+        "match_ok": true
+      },
+      {
+        "anchor_name": "anchor_right",
+        "template_keypoints": 189,
+        "good_matches": 8,
+        "match_ok": true
+      }
+    ],
+    "transform_type": "affine_partial",
+    "transform_summary": {
+      "scale": 1.012801,
+      "angle_deg": -2.640764,
+      "tx": -14.671101,
+      "ty": -3.075595
+    },
+    "roi_bbox": {
+      "x": 129,
+      "y": 125,
+      "width": 77,
+      "height": 78
+    },
+    "svm_label_id": -1,
+    "svm_raw_output": 0.956289,
+    "svm_margin_abs": 0.956289
+  },
+  "main_chip": {
+    "region": "main_chip",
+    "image": "D:\\bosch_project\\workspace\\new_PCB_nan\\resistor_detector\\detection_results\\main_chip\\good\\20260519_131630_695743.png",
+    "result": "good",
+    "reason": "hog_linear_svm",
+    "model_type": "opencv_hog_linear_svm",
+    "svm_label_id": 1,
+    "svm_raw_output": -1.0,
+    "svm_margin_abs": 1.0
+  },
+  "bottom_chip": {
+    "region": "bottom_chip",
+    "image": "D:\\bosch_project\\workspace\\new_PCB_nan\\resistor_detector\\detection_results\\bottom_chip\\good\\20260519_131630_695743.png",
+    "result": "good",
+    "reason": "hog_linear_svm",
+    "model_type": "opencv_hog_linear_svm",
+    "svm_label_id": 1,
+    "svm_raw_output": -1.0,
+    "svm_margin_abs": 1.0
+  },
+  "summary": {
+    "overall_result": "bad",
+    "bad_regions": [
+      "smd_components"
+    ],
+    "localization_failures": []
+  }
+}

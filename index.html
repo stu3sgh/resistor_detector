@@ -1,0 +1,1098 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>产线良品识别 - AI 智能检测</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        :root {
+            --bg-primary: #0a0a0f;
+            --bg-secondary: #12121a;
+            --bg-card: #1a1a2e;
+            --text-primary: #e8e8e8;
+            --text-secondary: #8888aa;
+            --accent: #4fc3f7;
+            --accent-glow: rgba(79, 195, 247, 0.3);
+            --danger: #ff6b6b;
+            --success: #51cf66;
+            --border: #2a2a3e;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Header */
+        .header {
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border);
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .header a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 14px;
+        }
+        .header a:hover { color: var(--accent); }
+        .header h1 {
+            font-size: 18px;
+            font-weight: 600;
+            flex: 1;
+        }
+        .header h1 span { color: var(--accent); }
+
+        /* Stats Bar */
+        .stats-bar {
+            display: flex;
+            gap: 12px;
+            padding: 16px 20px;
+            overflow-x: auto;
+        }
+        .stat-card {
+            flex: 1;
+            min-width: 100px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 12px;
+            text-align: center;
+        }
+        .stat-card .value {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--accent);
+        }
+        .stat-card .label {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+
+        /* Upload Section */
+        .upload-section {
+            padding: 20px;
+        }
+        .upload-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        .upload-btn {
+            border: 2px dashed var(--border);
+            border-radius: 16px;
+            padding: 32px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: var(--bg-secondary);
+        }
+        .upload-btn:hover {
+            border-color: var(--accent);
+            background: rgba(79, 195, 247, 0.05);
+        }
+        .upload-btn .icon {
+            font-size: 40px;
+            margin-bottom: 10px;
+        }
+        .upload-btn .title {
+            font-size: 16px;
+            color: var(--text-primary);
+            margin-bottom: 6px;
+            font-weight: 600;
+        }
+        .upload-btn .subtitle {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+        .upload-btn.primary-btn {
+            border-color: var(--accent);
+            border-style: solid;
+            background: rgba(79, 195, 247, 0.08);
+        }
+        .upload-btn input[type="file"] { display: none; }
+
+        /* Scanner Section */
+        .scanner-section {
+            display: none;
+            padding: 20px;
+        }
+        .scanner-section.active { display: block; }
+
+        .scanner-container {
+            position: relative;
+            width: 100%;
+            max-width: 500px;
+            margin: 0 auto;
+            aspect-ratio: 4/3;
+            background: #000;
+            border-radius: 16px;
+            overflow: hidden;
+            touch-action: none;
+            user-select: none;
+        }
+
+        .image-layer {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            cursor: grab;
+        }
+        .image-layer img {
+            position: absolute;
+            transform-origin: 0 0;
+            pointer-events: none;
+            max-width: none;
+            max-height: none;
+        }
+        .image-layer:active { cursor: grabbing; }
+
+        .mask-overlay { display: none; }
+
+        .frame-guide {
+            position: absolute;
+            z-index: 3;
+            pointer-events: none;
+            border: 2px dashed #d4a843;
+            box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.55);
+            border-radius: 4px;
+        }
+
+        .frame-label {
+            display: block;
+            position: absolute;
+            top: -32px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #d4a843;
+            color: #000;
+            font-size: 12px;
+            font-weight: 600;
+            padding: 4px 12px;
+            border-radius: 4px;
+            white-space: nowrap;
+            z-index: 5;
+        }
+
+        .sub-frame {
+            position: absolute;
+            z-index: 4;
+            pointer-events: none;
+            border: 1.5px dashed rgba(255, 68, 68, 0.8);
+            border-radius: 2px;
+        }
+        .sub-frame-label {
+            position: absolute;
+            top: -18px;
+            left: 2px;
+            color: #ff4444;
+            font-size: 9px;
+            font-weight: 600;
+            white-space: nowrap;
+            text-shadow: 0 0 3px rgba(0,0,0,0.8);
+        }
+
+        .scan-line { display: none; }
+
+        .zoom-controls {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            margin-top: 16px;
+        }
+        .zoom-btn {
+            width: 44px; height: 44px;
+            border-radius: 50%;
+            border: 1px solid var(--border);
+            background: var(--bg-card);
+            color: var(--text-primary);
+            font-size: 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+        .zoom-btn:hover { border-color: var(--accent); color: var(--accent); }
+        .zoom-btn:active { transform: scale(0.9); }
+        .zoom-label {
+            font-size: 13px;
+            color: var(--text-secondary);
+            min-width: 60px;
+            text-align: center;
+        }
+        .btn-rotate {
+            width: 44px; height: 44px;
+            border-radius: 50%;
+            border: 1px solid var(--border);
+            background: var(--bg-card);
+            color: var(--text-primary);
+            font-size: 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+        .btn-rotate:hover { border-color: var(--accent); color: var(--accent); }
+        .btn-rotate:active { transform: scale(0.9); }
+
+        /* Action Buttons */
+        .action-buttons {
+            display: flex;
+            gap: 12px;
+            margin-top: 20px;
+            padding: 0 20px;
+        }
+        .btn {
+            flex: 1;
+            padding: 14px;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn:active { transform: scale(0.97); }
+        .btn-secondary {
+            background: var(--bg-card);
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+        }
+        .btn-secondary:hover { border-color: var(--text-secondary); }
+        .btn-primary {
+            background: var(--accent);
+            color: var(--bg-primary);
+        }
+        .btn-primary:hover { box-shadow: 0 4px 20px var(--accent-glow); }
+
+        /* Result Section */
+        .result-section { display: none; padding: 20px; }
+        .result-section.active { display: block; }
+
+        .result-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 16px;
+        }
+        .result-card h3 {
+            font-size: 15px;
+            color: var(--text-secondary);
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .result-images {
+            display: flex;
+            gap: 12px;
+            overflow-x: auto;
+            padding-bottom: 8px;
+        }
+        .result-images img {
+            flex: 1;
+            min-width: 200px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+        }
+
+        .result-list { list-style: none; }
+        .result-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 0;
+            border-bottom: 1px solid var(--border);
+        }
+        .result-item:last-child { border-bottom: none; }
+        .result-item .name { font-size: 15px; font-weight: 500; }
+        .result-item .confidence { display: flex; align-items: center; gap: 8px; }
+        .confidence-bar {
+            width: 80px; height: 6px;
+            background: var(--border);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+        .confidence-fill {
+            height: 100%; border-radius: 3px;
+            background: var(--accent); transition: width 0.5s;
+        }
+        .confidence-value {
+            font-size: 14px; font-weight: 600;
+            min-width: 42px; text-align: right;
+        }
+
+        /* Loading */
+        .loading-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.8);
+            z-index: 200;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+        }
+        .loading-overlay.active { display: flex; }
+        .spinner {
+            width: 48px; height: 48px;
+            border: 3px solid var(--border);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .loading-text { font-size: 15px; color: var(--text-secondary); }
+
+        /* Cropped Preview */
+        .cropped-preview { display: none; padding: 20px; }
+        .cropped-preview.active { display: block; }
+        .cropped-img-container { text-align: center; margin-bottom: 16px; }
+        .cropped-img-container img {
+            max-width: 100%; border-radius: 12px;
+            border: 1px solid var(--border);
+        }
+
+        /* Sub-region detection */
+        .sub-region-item {
+            display: flex; gap: 12px; align-items: flex-start;
+            padding: 12px; background: var(--bg-secondary); border-radius: 12px;
+            border: 1px solid var(--border);
+        }
+        .sub-region-item img {
+            width: 120px; height: auto; border-radius: 8px;
+            border: 1px solid var(--border); flex-shrink: 0;
+            object-fit: cover;
+        }
+        .sub-region-info { flex: 1; min-width: 0; }
+        .sub-region-label {
+            font-size: 14px; font-weight: 600; margin-bottom: 6px;
+            color: var(--text-primary);
+        }
+        .sub-region-btns { display: flex; gap: 8px; margin-top: 8px; }
+        .sub-btn {
+            flex: 1; padding: 8px 12px; border-radius: 8px;
+            border: 2px solid var(--border); background: transparent;
+            color: var(--text-primary); font-size: 13px; font-weight: 600;
+            cursor: pointer; transition: all 0.2s; text-align: center;
+        }
+        .sub-btn.active-good {
+            border-color: var(--success); background: rgba(81,207,102,0.15);
+            color: var(--success);
+        }
+        .sub-btn.active-bad {
+            border-color: var(--danger); background: rgba(255,107,107,0.15);
+            color: var(--danger);
+        }
+        .sub-region-ai-hint {
+            font-size: 11px; color: var(--text-secondary); margin-top: 4px;
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            top: 80px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-20px);
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+            padding: 12px 24px;
+            border-radius: 10px;
+            font-size: 14px;
+            z-index: 300;
+            opacity: 0;
+            transition: all 0.3s;
+            pointer-events: none;
+        }
+        .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+        @media (max-width: 480px) {
+            .stats-bar { padding: 12px; gap: 8px; }
+            .stat-card { padding: 10px 8px; min-width: 80px; }
+            .stat-card .value { font-size: 20px; }
+            .scanner-container { border-radius: 12px; }
+            .action-buttons { flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header -->
+    <div class="header">
+        <a href="/">← 返回</a>
+        <h1>⚡ 产线<span>良品</span>识别</h1>
+    </div>
+
+    <!-- Stats Bar -->
+    <div class="stats-bar">
+        <div class="stat-card">
+            <div class="value" id="statTotal">0</div>
+            <div class="label">今日检测</div>
+        </div>
+        <div class="stat-card">
+            <div class="value" id="statDefect">0</div>
+            <div class="label">缺陷发现</div>
+        </div>
+        <div class="stat-card">
+            <div class="value" id="statRate">--</div>
+            <div class="label">不良率</div>
+        </div>
+    </div>
+
+    <!-- Upload Section -->
+    <div class="upload-section" id="uploadSection">
+        <div class="upload-buttons">
+            <div class="upload-btn primary-btn" id="uploadArea">
+                <div class="icon">📷</div>
+                <div class="title">拍照 / 从相册选择</div>
+                <div class="subtitle">点击选择图片，或将图片拖拽到此处<br>支持 JPG / PNG / WEBP</div>
+                <input type="file" id="fileInput" accept="image/*">
+            </div>
+        </div>
+    </div>
+
+    <!-- Scanner Section -->
+    <div class="scanner-section" id="scannerSection">
+        <div class="scanner-container" id="scannerContainer">
+            <div class="image-layer" id="imageLayer">
+                <img id="sourceImage" src="" alt="">
+            </div>
+            <div class="frame-guide" id="frameGuide">
+                <div class="frame-label">请将电路板放入黄框内</div>
+                <div class="sub-frame" id="subFrame0"><div class="sub-frame-label">SMD</div></div>
+                <div class="sub-frame" id="subFrame1"><div class="sub-frame-label">主控芯片</div></div>
+                <div class="sub-frame" id="subFrame2"><div class="sub-frame-label">底部芯片</div></div>
+            </div>
+        </div>
+        <div class="zoom-controls">
+            <button class="zoom-btn" id="zoomOut">−</button>
+            <span class="zoom-label" id="zoomLabel">100%</span>
+            <button class="zoom-btn" id="zoomIn">+</button>
+            <button class="btn-rotate" id="btnRotate" title="顺时针旋转90°">🔄</button>
+        </div>
+        <div class="action-buttons">
+            <button class="btn btn-secondary" id="btnRetake">重新选择</button>
+            <button class="btn btn-primary" id="btnConfirm">确认裁剪</button>
+        </div>
+    </div>
+
+    <!-- Cropped Preview -->
+    <div class="cropped-preview" id="croppedPreview">
+        <div class="result-card">
+            <h3>✂️ 裁剪预览</h3>
+            <div class="cropped-img-container">
+                <img id="croppedImage" src="" alt="裁剪结果">
+            </div>
+        </div>
+        <div class="action-buttons">
+            <button class="btn btn-secondary" id="btnBackToScan">返回调整</button>
+            <button class="btn btn-secondary" id="btnDownload" style="border-color:var(--success);color:var(--success)">📥 下载裁剪图</button>
+            <button class="btn btn-primary" id="btnAnalyze">🚀 开始检测</button>
+        </div>
+        <div id="cropInfo" style="text-align:center;padding:8px;font-size:13px;color:var(--text-secondary);display:none"></div>
+    </div>
+
+    <!-- Result Section -->
+    <div class="result-section" id="resultSection">
+        <div class="result-card">
+            <h3>🔍 检测结果</h3>
+            <!-- 上面：裁剪原图 + AI标注图 -->
+            <div class="result-images" id="resultImagesRow">
+                <div style="flex:1;min-width:0">
+                    <div style="font-size:12px;color:var(--text-secondary);margin-bottom:8px;">裁剪原图</div>
+                    <img id="resultOriginal" src="" alt="原图" style="max-width:100%;border-radius:12px;border:1px solid var(--border)">
+                </div>
+                <div style="flex:1;min-width:0">
+                    <div style="font-size:12px;color:var(--text-secondary);margin-bottom:8px;">AI 标注</div>
+                    <img id="resultAnnotated" src="" alt="标注" style="max-width:100%;border-radius:12px;border:1px solid var(--border)">
+                </div>
+            </div>
+        </div>
+        <!-- 下面：3个子区域检测 -->
+        <div class="result-card" id="subRegionCard" style="display:none">
+            <h3>🔍 区域检测（点击切换判断）</h3>
+            <div id="subRegions" style="display:flex;flex-direction:column;gap:16px"></div>
+        </div>
+        <div class="action-buttons">
+            <button class="btn btn-secondary" id="btnNewScan">检测新图片</button>
+            <button class="btn btn-primary" id="btnSaveResult" style="display:none">💾 确认检测结果</button>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="spinner"></div>
+        <div class="loading-text">AI 正在分析中...</div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
+
+    <!-- Hidden Canvas -->
+    <canvas id="cropCanvas" style="display:none;"></canvas>
+
+    <script>
+    (() => {
+        const API_BASE = window.location.origin + '/resistor/api';
+        const FRAME_RATIO = 0.82;
+        const FRAME_ASPECT = 609 / 1479; // gold window aspect ratio ~0.412
+        const MIN_SCALE = 0.05, MAX_SCALE = 10, SCALE_FACTOR = 1.15;
+
+        const $ = id => document.getElementById(id);
+
+        // State
+        let state = {
+            imgWidth: 0, imgHeight: 0,
+            scale: 1, offsetX: 0, offsetY: 0,
+            dragging: false, lastX: 0, lastY: 0,
+            frameRect: { x: 0, y: 0, w: 0, h: 0 },
+            croppedDataURL: null,
+            currentSrc: null
+        };
+
+        // ============ Toast ============
+        function showToast(msg, duration = 2000) {
+            const t = $('toast');
+            t.textContent = msg;
+            t.classList.add('show');
+            setTimeout(() => t.classList.remove('show'), duration);
+        }
+
+        // ============ Section Switch ============
+        function showSection(name) {
+            $('uploadSection').style.display = (name === 'upload') ? 'block' : 'none';
+            $('scannerSection').className = 'scanner-section' + (name === 'scan' ? ' active' : '');
+            $('croppedPreview').className = 'cropped-preview' + (name === 'crop' ? ' active' : '');
+            $('resultSection').className = 'result-section' + (name === 'result' ? ' active' : '');
+        }
+
+        // ============ Frame Position (Scanner) ============
+        function updateFrame() {
+            const c = $('scannerContainer');
+            const cw = c.clientWidth, ch = c.clientHeight;
+            // Fit frame inside container while maintaining aspect ratio
+            let fw = cw * 0.82;
+            let fh = fw / FRAME_ASPECT;
+            if (fh > ch * 0.82) {
+                fh = ch * 0.82;
+                fw = fh * FRAME_ASPECT;
+            }
+            const fx = (cw - fw) / 2, fy = (ch - fh) / 2;
+            state.frameRect = { x: fx, y: fy, w: fw, h: fh };
+
+            const fg = $('frameGuide');
+            fg.style.left = fx + 'px';
+            fg.style.top = fy + 'px';
+            fg.style.width = fw + 'px';
+            fg.style.height = fh + 'px';
+
+            // Update sub-frames (red dashed boxes) relative to frame guide
+            SUB_REGIONS.forEach((region, i) => {
+                const [x1n, y1n, x2n, y2n] = region.box;
+                const sf = $('subFrame' + i);
+                sf.style.left = (x1n * 100) + '%';
+                sf.style.top = (y1n * 100) + '%';
+                sf.style.width = ((x2n - x1n) * 100) + '%';
+                sf.style.height = ((y2n - y1n) * 100) + '%';
+            });
+        }
+
+        // ============ Image Transform ============
+        function updateImageTransform() {
+            const img = $('sourceImage');
+            img.style.transform = `translate(${state.offsetX}px, ${state.offsetY}px) scale(${state.scale})`;
+            $('zoomLabel').textContent = Math.round(state.scale * 100) + '%';
+        }
+
+        function rotateImage() {
+            if (!state.currentSrc) return;
+            const img = $('sourceImage');
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            // Load original source image (could be dataURL or blob URL)
+            const tempImg = new Image();
+            tempImg.onload = () => {
+                const w = tempImg.naturalWidth;
+                const h = tempImg.naturalHeight;
+                canvas.width = h;
+                canvas.height = w;
+                ctx.translate(h / 2, w / 2);
+                ctx.rotate(Math.PI / 2);
+                ctx.drawImage(tempImg, -w / 2, -h / 2);
+                const dataURL = canvas.toDataURL('image/jpeg', 0.92);
+                state.currentSrc = dataURL;
+                loadImageToScanner(dataURL);
+            };
+            tempImg.src = state.currentSrc;
+        }
+
+        function fitImage() {
+            const c = $('scannerContainer');
+            const cw = c.clientWidth, ch = c.clientHeight;
+            state.scale = Math.min(cw / state.imgWidth, ch / state.imgHeight);
+            state.offsetX = (cw - state.imgWidth * state.scale) / 2;
+            state.offsetY = (ch - state.imgHeight * state.scale) / 2;
+            updateImageTransform();
+        }
+
+        // ============ Drag ============
+        function onDragStart(e) {
+            e.preventDefault();
+            state.dragging = true;
+            const t = e.touches ? e.touches[0] : e;
+            state.lastX = t.clientX; state.lastY = t.clientY;
+        }
+        function onDragMove(e) {
+            if (!state.dragging) return;
+            e.preventDefault();
+            const t = e.touches ? e.touches[0] : e;
+            state.offsetX += t.clientX - state.lastX;
+            state.offsetY += t.clientY - state.lastY;
+            state.lastX = t.clientX; state.lastY = t.clientY;
+            updateImageTransform();
+        }
+        function onDragEnd() { state.dragging = false; }
+
+        let lastPinchDist = 0;
+        function onPinchStart(e) {
+            if (e.touches.length === 2) {
+                lastPinchDist = Math.hypot(
+                    e.touches[0].clientX - e.touches[1].clientX,
+                    e.touches[0].clientY - e.touches[1].clientY
+                );
+            }
+        }
+        function onPinchMove(e) {
+            if (e.touches.length === 2) {
+                e.preventDefault();
+                const d = Math.hypot(
+                    e.touches[0].clientX - e.touches[1].clientX,
+                    e.touches[0].clientY - e.touches[1].clientY
+                );
+                applyZoom((d - lastPinchDist) * 0.005);
+                lastPinchDist = d;
+            }
+        }
+
+        function applyZoom(factor) {
+            state.scale = Math.min(MAX_SCALE, Math.max(MIN_SCALE, state.scale * factor));
+            updateImageTransform();
+        }
+
+        // ============ Crop ============
+        function cropImage() {
+            const { x, y, w, h } = state.frameRect;
+            const s = state.scale;
+            const srcX = (x - state.offsetX) / s;
+            const srcY = (y - state.offsetY) / s;
+            const srcW = w / s, srcH = h / s;
+
+            const cx = Math.max(0, srcX);
+            const cy = Math.max(0, srcY);
+            const cw = Math.min(state.imgWidth - cx, srcW - (cx - srcX));
+            const ch = Math.min(state.imgHeight - cy, srcH - (cy - srcY));
+
+            if (cw <= 0 || ch <= 0) { showToast('请将图片移动到框内'); return null; }
+
+            // 使用原图像素尺寸，避免分辨率下降
+            const outW = Math.round(srcW);
+            const outH = Math.round(srcH);
+            const padX = Math.round(cx - srcX);
+            const padY = Math.round(cy - srcY);
+
+            const cv = $('cropCanvas');
+            cv.width = outW; cv.height = outH;
+            const ctx = cv.getContext('2d');
+            ctx.clearRect(0, 0, outW, outH);
+            ctx.drawImage(
+                $('sourceImage'), cx, cy, cw, ch,
+                padX, padY,
+                Math.round(cw), Math.round(ch)
+            );
+            return cv.toDataURL('image/png');
+        }
+
+        // ============ Load image into scanner ============
+        function loadImageToScanner(src) {
+            state.currentSrc = src;
+            const img = $('sourceImage');
+            img.onload = () => {
+                state.imgWidth = img.naturalWidth;
+                state.imgHeight = img.naturalHeight;
+                // 自动压缩：宽度超过3000px时等比缩放（保留约3MB级别画质）
+                if (img.naturalWidth > 3000) {
+                    const scale = 3000 / img.naturalWidth;
+                    const cv = document.createElement('canvas');
+                    cv.width = 3000;
+                    cv.height = Math.round(img.naturalHeight * scale);
+                    cv.getContext('2d').drawImage(img, 0, 0, cv.width, cv.height);
+                    state.currentSrc = cv.toDataURL('image/jpeg', 0.85);
+                    state.imgWidth = cv.width;
+                    state.imgHeight = cv.height;
+                    img.src = state.currentSrc;
+                    showToast(`📐 自动压缩至 ${cv.width}×${cv.height}`);
+                    return;
+                }
+                showSection('scan');
+                requestAnimationFrame(() => { updateFrame(); fitImage(); });
+            };
+            img.src = src;
+        }
+
+        // ============ Sub-region config (normalized 0~1: x1, y1, x2, y2) ============
+        const SUB_REGIONS = [
+            { id: 'smd_components', label: '贴片元件区', box: [0.01, 0.01, 0.51, 0.14], aiVerdict: 'good', goodHint: '电阻没有焊上', badHint: '电阻已焊上' },
+            { id: 'main_chip', label: '主控芯片 (ARM)', box: [0.21, 0.54, 0.74, 0.77], aiVerdict: 'good', goodHint: '有完整的胶水', badHint: '没有胶水或胶水被破坏' },
+            { id: 'bottom_chip', label: '底部芯片', box: [0.18, 0.81, 0.60, 0.95], aiVerdict: 'good', goodHint: '有完整的胶水', badHint: '没有胶水或胶水被破坏' }
+        ];
+
+        // ============ API ============
+        async function analyzeImage(imageDataURL) {
+            try {
+                const blob = await (await fetch(imageDataURL)).blob();
+                const formData = new FormData();
+                formData.append('image', blob, 'crop.png');
+                const resp = await fetch(API_BASE + '/predict', { method: 'POST', body: formData });
+                if (!resp.ok) throw new Error('API ' + resp.status);
+                return await resp.json();
+            } catch (err) {
+                return {
+                    success: false, demo: true,
+                    message: '后端服务未连接，显示演示结果',
+                    predictions: [
+                        { class: 'SMD 元件 - 外观检测', confidence: 0.95 },
+                        { class: '主芯片 - 焊点检测', confidence: 0.92 },
+                        { class: '底部芯片 - 引脚检测', confidence: 0.88 }
+                    ]
+                };
+            }
+        }
+
+        function displayResults(data, croppedDataURL) {
+            $('resultOriginal').src = croppedDataURL;
+            generateAnnotated(croppedDataURL, data.predictions || []);
+            renderSubRegions(croppedDataURL, data);
+            $('btnSaveResult').style.display = '';
+            showSection('result');
+        }
+
+        // Generate annotated image with boxes drawn on it
+        function generateAnnotated(croppedDataURL, predictions) {
+            const img = new Image();
+            img.onload = () => {
+                const cv = document.createElement('canvas');
+                cv.width = img.naturalWidth;
+                cv.height = img.naturalHeight;
+                const ctx = cv.getContext('2d');
+                ctx.drawImage(img, 0, 0);
+                const W = img.naturalWidth, H = img.naturalHeight;
+                const colors = ['#ff4444', '#ff4444', '#ff4444'];
+                SUB_REGIONS.forEach((region, i) => {
+                    const [x1, y1, x2, y2] = region.box;
+                    ctx.strokeStyle = colors[i];
+                    ctx.lineWidth = Math.max(3, W * 0.004);
+                    ctx.strokeRect(x1*W, y1*H, (x2-x1)*W, (y2-y1)*H);
+                    ctx.fillStyle = '#ff4444';
+                    ctx.font = `bold ${Math.max(16, W*0.02)}px sans-serif`;
+                    ctx.fillText(region.label, x1*W + 4, y1*H + Math.max(20, W*0.025));
+                });
+                $('resultAnnotated').src = cv.toDataURL('image/png');
+            };
+            img.src = croppedDataURL;
+        }
+
+        // Render sub-region cards with cropped images + good/bad buttons
+        async function renderSubRegions(croppedDataURL, data) {
+            const container = $('subRegions');
+            container.innerHTML = '';
+            const img = new Image();
+            img.onload = async () => {
+                const W = img.naturalWidth, H = img.naturalHeight;
+
+                // Call classifier for ALL regions
+                const aiVerdicts = [null, null, null];
+                try {
+                    for (let i = 0; i < SUB_REGIONS.length; i++) {
+                        const [x1, y1, x2, y2] = SUB_REGIONS[i].box;
+                        const sx = Math.round(x1*W), sy = Math.round(y1*H);
+                        const sw = Math.round((x2-x1)*W), sh = Math.round((y2-y1)*H);
+                        const cv = document.createElement('canvas');
+                        cv.width = sw; cv.height = sh;
+                        cv.getContext('2d').drawImage(img, sx, sy, sw, sh, 0, 0, sw, sh);
+                        const subDataURL = cv.toDataURL('image/png');
+                        const cResp = await fetch(API_BASE + '/classify', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ image: subDataURL, region: SUB_REGIONS[i].id })
+                        });
+                        if (cResp.ok) {
+                            const cData = await cResp.json();
+                            aiVerdicts[i] = cData.result;
+                        }
+                    }
+                } catch (e) {
+                    console.log('Classifier unavailable:', e);
+                }
+
+                SUB_REGIONS.forEach((region, idx) => {
+                    const [x1, y1, x2, y2] = region.box;
+                    const sx = Math.round(x1*W), sy = Math.round(y1*H);
+                    const sw = Math.round((x2-x1)*W), sh = Math.round((y2-y1)*H);
+                    if (sw <= 0 || sh <= 0) return;
+
+                    // Crop sub-image
+                    const cv = document.createElement('canvas');
+                    cv.width = sw; cv.height = sh;
+                    cv.getContext('2d').drawImage(img, sx, sy, sw, sh, 0, 0, sw, sh);
+                    const subDataURL = cv.toDataURL('image/png');
+
+                    // Determine AI verdict
+                    let aiVerdict;
+                    if (aiVerdicts[idx]) {
+                        aiVerdict = aiVerdicts[idx];
+                    } else {
+                        aiVerdict = 'bad';
+                    }
+                    region.aiVerdict = aiVerdict;
+                    region.userVerdict = null;
+
+                    const item = document.createElement('div');
+                    item.className = 'sub-region-item';
+                    item.innerHTML = `
+                        <img src="${subDataURL}" alt="${region.label}">
+                        <div class="sub-region-info">
+                            <div class="sub-region-label">${region.label}</div>
+                            <div style="font-size:11px;color:var(--text-secondary)">区域 ${idx+1} · ${sw}×${sh}px</div>
+                            <div class="sub-region-btns">
+                                <div class="sub-btn ${aiVerdict==='good'?'active-good':''}" data-idx="${idx}" data-verdict="good">✅ 良品</div>
+                                <div class="sub-btn ${aiVerdict==='bad'?'active-bad':''}" data-idx="${idx}" data-verdict="bad">❌ 不良</div>
+                            </div>
+                            <div class="sub-region-ai-hint" id="hint-${idx}">AI 判断：${aiVerdict==='good'?'良品':'不良'}（${aiVerdict==='good'?region.goodHint:region.badHint}）。请再次确认，如有错误请点击上方按钮修改</div>
+                        </div>`;
+                    container.appendChild(item);
+
+                    // Button click handlers
+                    item.querySelectorAll('.sub-btn').forEach(btn => {
+                        btn.addEventListener('click', () => {
+                            const i = parseInt(btn.dataset.idx);
+                            const v = btn.dataset.verdict;
+                            SUB_REGIONS[i].userVerdict = v;
+                            // Update button states
+                            item.querySelectorAll('.sub-btn').forEach(b => {
+                                b.classList.remove('active-good', 'active-bad');
+                            });
+                            btn.classList.add(v === 'good' ? 'active-good' : 'active-bad');
+                            // Update hint
+                            const aiV = SUB_REGIONS[i].aiVerdict;
+                            const hint = document.getElementById('hint-' + i);
+                            if (v === aiV) {
+                                hint.textContent = `✅ 与AI判断一致：${v==='good'?'良品':'不良'}`;
+                            } else {
+                                hint.textContent = `⚠️ 已修改：AI判断${aiV==='good'?'良品':'不良'} → 用户修改为${v==='good'?'良品':'不良'}`;
+                                hint.style.color = '#ffa500';
+                            }
+                        });
+                    });
+                });
+                $('subRegionCard').style.display = 'block';
+            };
+            img.src = croppedDataURL;
+        }
+
+        async function loadStats() {
+            try {
+                const r = await fetch(API_BASE + '/stats');
+                if (r.ok) {
+                    const d = await r.json();
+                    $('statTotal').textContent = d.total || 0;
+                    $('statDefect').textContent = d.defects || 0;
+                    $('statRate').textContent = d.total > 0 ? (d.defects / d.total * 100).toFixed(1) + '%' : '--';
+                }
+            } catch (e) {}
+        }
+
+        // ============ Events ============
+
+        // Upload
+        $('uploadArea').addEventListener('click', () => $('fileInput').click());
+
+        $('fileInput').addEventListener('change', e => {
+            const f = e.target.files[0];
+            if (f) {
+                const reader = new FileReader();
+                reader.onload = ev => loadImageToScanner(ev.target.result);
+                reader.readAsDataURL(f);
+            }
+        });
+
+        // Drag & drop
+        $('uploadArea').addEventListener('dragover', e => { e.preventDefault(); $('uploadArea').classList.add('drag-over'); });
+        $('uploadArea').addEventListener('dragleave', () => $('uploadArea').classList.remove('drag-over'));
+        $('uploadArea').addEventListener('drop', e => {
+            e.preventDefault();
+            $('uploadArea').classList.remove('drag-over');
+            if (e.dataTransfer.files[0]) {
+                const reader = new FileReader();
+                reader.onload = ev => loadImageToScanner(ev.target.result);
+                reader.readAsDataURL(e.dataTransfer.files[0]);
+            }
+        });
+
+        // Drag image in scanner
+        $('imageLayer').addEventListener('mousedown', onDragStart);
+        window.addEventListener('mousemove', onDragMove);
+        window.addEventListener('mouseup', onDragEnd);
+        $('imageLayer').addEventListener('touchstart', e => { onDragStart(e); onPinchStart(e); }, { passive: false });
+        window.addEventListener('touchmove', e => { onDragMove(e); onPinchMove(e); }, { passive: false });
+        window.addEventListener('touchend', onDragEnd);
+
+        // Zoom
+        $('zoomIn').addEventListener('click', () => applyZoom(SCALE_FACTOR));
+        $('zoomOut').addEventListener('click', () => applyZoom(1 / SCALE_FACTOR));
+        $('btnRotate').addEventListener('click', () => rotateImage());
+        $('scannerContainer').addEventListener('wheel', e => {
+            e.preventDefault();
+            applyZoom(e.deltaY > 0 ? (1 / SCALE_FACTOR) : SCALE_FACTOR);
+        }, { passive: false });
+
+        // Scanner buttons
+        $('btnRetake').addEventListener('click', () => {
+            $('fileInput').value = '';
+            showSection('upload');
+        });
+        $('btnConfirm').addEventListener('click', () => {
+            const d = cropImage();
+            if (!d) return;
+            state.croppedDataURL = d;
+            $('croppedImage').src = d;
+            // 显示分辨率信息
+            const tempImg = new Image();
+            tempImg.onload = () => {
+                const info = $('cropInfo');
+                info.textContent = `📐 ${tempImg.width} × ${tempImg.height} px`;
+                info.style.display = 'block';
+            };
+            tempImg.src = d;
+            showSection('crop');
+            // Save to server for review
+            (async () => {
+                try {
+                    const blob = await (await fetch(d)).blob();
+                    const resp = await fetch(API_BASE + '/upload/save', { method: 'POST', body: blob });
+                    if (resp.ok) {
+                        const info = await resp.json();
+                        const sizeKB = (info.size / 1024).toFixed(1);
+                        const cropInfo = $('cropInfo');
+                        cropInfo.textContent = `📐 ${info.width} × ${info.height} px · ${sizeKB} KB`;
+                        cropInfo.style.display = 'block';
+                    }
+                } catch(e) {}
+            })();
+        });
+
+        // Crop buttons
+        $('btnBackToScan').addEventListener('click', () => showSection('scan'));
+
+        // Download cropped image
+        function downloadCropped() {
+            if (state.croppedDataURL) {
+                const a = document.createElement('a');
+                a.href = state.croppedDataURL;
+                a.download = 'resistor_crop_' + new Date().toISOString().slice(0,19).replace(/[:-]/g,'') + '.png';
+                a.click();
+                showToast('✅ 图片已下载');
+            } else {
+                showToast('❌ 没有裁剪图片');
+            }
+        }
+        $('btnDownload').addEventListener('click', downloadCropped);
+
+        // Save detection results to server
+        $('btnSaveResult').addEventListener('click', async () => {
+            $('btnSaveResult').disabled = true;
+            $('btnSaveResult').textContent = '⏳ 保存中...';
+            try {
+                // 压缩图片再上传，限制最大 1600px 宽
+                const compressed = await new Promise(resolve => {
+                    const img = new Image();
+                    img.onload = () => {
+                        const maxW = 1600;
+                        if (img.naturalWidth <= maxW) { resolve(state.croppedDataURL); return; }
+                        const scale = maxW / img.naturalWidth;
+                        const cv = document.createElement('canvas');
+                        cv.width = maxW;
+                        cv.height = Math.round(img.naturalHeight * scale);
+                        cv.getContext('2d').drawImage(img, 0, 0, cv.width, cv.height);
+                        resolve(cv.toDataURL('image/png'));
+                    };
+                    img.src = state.croppedDataURL;
+                });
+                const results = SUB_REGIONS.map((r, i) => ({
+                    label: r.label,
+                    verdict: r.userVerdict || r.aiVerdict
+                }));
+                const resp = await fetch(API_BASE + '/upload/save_result', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ results, image: compressed })
+                });
+                if (resp.ok) {
+                    const d = await resp.json();
+                    showToast('✅ 检测结果已保存');
+                } else {
+                    showToast('❌ 保存失败');
+                }
+            } catch (e) {
+                showToast('❌ 保存失败: ' + e.message);
+            } finally {
+                $('btnSaveResult').disabled = false;
+                $('btnSaveResult').textContent = '💾 确认检测结果';
+            }
+        });
+
+        $('btnAnalyze').addEventListener('click', async () => {
+            $('loadingOverlay').classList.add('active');
+            try {
+                const data = await analyzeImage(state.croppedDataURL);
+                displayResults(data, state.croppedDataURL);
+            } finally {
+                $('loadingOverlay').classList.remove('active');
+            }
+        });
+
+        $('btnNewScan').addEventListener('click', () => {
+            $('fileInput').value = '';
+            showSection('upload');
+        });
+
+        // Resize
+        window.addEventListener('resize', () => {
+            if ($('scannerSection').className.includes('active')) { updateFrame(); fitImage(); }
+        });
+
+        // Init
+        loadStats();
+    })();
+    </script>
+</body>
+</html>

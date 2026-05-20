@@ -1,0 +1,883 @@
+{
+  "model_type": "opencv_hog_linear_svm",
+  "feature_config": {
+    "width": 96,
+    "height": 96,
+    "block_size": 16,
+    "block_stride": 8,
+    "cell_size": 8,
+    "bins": 9,
+    "equalize_hist": true,
+    "svm_c": 1.0
+  },
+  "label_to_id": {
+    "bad": -1,
+    "good": 1
+  },
+  "training_summary": {
+    "region_name": "bottom_chip",
+    "dataset_root": "D:\\bosch_project\\workspace\\new_PCB_nan\\resistor_detector\\detection_results\\bottom_chip",
+    "label_counts": {
+      "good": 11,
+      "bad": 60
+    },
+    "effective_label_counts": {
+      "bad": 60,
+      "good": 60
+    },
+    "balance_strategy": "oversample",
+    "sample_count": 71,
+    "samples": [
+      {
+        "image": "D:\\bosch_project\\workspace\\new_PCB_nan\\resistor_detector\\detection_results\\bottom_chip\\good\\20260519_112428_089142.png",
+        "label": "good"
+      },
+      {
+        "image": "D:\\bosch_project\\workspace\\new_PCB_nan\\resistor_detector\\detection_results\\bottom_chip\\good\\20260519_112452_810575.png",
+        "label": "good"
+      },
+      {
+        "image": "D:\\bosch_project\\workspace\\new_PCB_nan\\resistor_detector\\detection_results\\bottom_chip\\good\\20260519_112521_098073.png",
+        "label": "good"
+      },
+      {
+        "image": "D:\\bosch_project\\workspace\\new_PCB_nan\\resistor_detector\\detection_results\\bottom_chip\\good\\20260519_112546_383595.png",
+        "label": "good"
+      },
+      {
+        "image": "D:\\bosch_project\\workspace\\new_PCB_nan\\resistor_detector\\detection_results\\bottom_chip\\good\\20260519_112552_504559.png",
+        "label": "good"
+      },
+      {
+        "image": "D:\\bosch_project\\workspace\\new_PCB_nan\\resistor_detector\\detection_results\\bottom_chip\\good\\20260519_131630_695743.png",
+        "label": "good"
+      },
+      {
+        "image": "D:\\bosch_project\\workspace\\new_PCB_nan\\resistor_detector\\detection_results\\bottom_chip\\good\\20260519_131653_290840.png",
+        "label": "good"
+      },
+      {
+        "image": "D:\\bosch_project\\workspace\\new_PCB_nan\\resistor_detector\\detection_results\\bottom_chip\\good\\20260519_131712_383219.png",
+        "label": "good"
+      },
+      {
+        "image": "D:\\bosch_project\\workspace\\new_PCB_nan\\resistor_detector\\detection_results\\bottom_chip\\good\\20260519_131733_045606.png",
+        "label": "good"
+      },
+      {
+        "image": "D:\\bosch_project\\workspace\\new_PCB_nan\\resistor_detector\\detection_results\\bottom_chip\\good\\20260519_132626_good.png",
+        "label": "good"
+      },
+      {
+        "image": "D:\\bosch_project\\workspace\\new_PCB_nan\\resistor_detector\\detection_results\\bottom_chip\\good\\20260519_132700_good.png",
+        "label": "good"
+      },
+      {
+        "image": "D:\\bosch_project\\workspace\\new_PCB_nan\\resistor_detector\\detection_results\\bottom_chip\\bad\\20260519_012111_bad.png",
+        "label": "bad"
+      },
+      {
+        "image": "D:\\bosch_project\\workspace\\new_PCB_nan\\resistor_detector\\detection_results\\bottom_chip\\bad\\20260519_012232_bad.png",
+        "label": "bad"
+      },
+      {
+        "image": "D:\\bosch_project\\workspace\\new_PCB_nan\\resistor_detector\\detection_results\\bottom_chip\\bad\\20260519_012824_bad.png",
+        "label": "bad"
+      },
+      {
+        "image": "D:\\bosch_project\\workspace\\new_PCB_nan\\resistor_detector\\detection_results\\bottom_chip\\bad\\20260519_013039_bad.png",
+        "label": "bad"
+      },
+      {
+        "image": "D:\\bosch_project\\workspace\\new_PCB_nan\\resistor_detector\\detection_results\\bottom_chip\\bad\\20260519_013257_bad.png",
+        "label": "bad"
+      },
+      {
+        "image": "D:\\bosch_project\\workspace\\new_PCB_nan\\resistor_detector\\detection_results\\bottom_chip\\bad\\20260519_013415_bad.png",
+        "label": "bad"
+      },
+      {
+        "image": "D:\\bosch_project\\workspace\\new_PCB_nan\\resistor_detector\\detection_results\\bottom_chip\\bad\\20260519_013507_bad.png",
+        "label": "bad"
+      },
+      {
+        "image": "D:\\bosch_project\\workspace\\new_PCB_nan\\resistor_detector\\detection_results\\bottom_chip\\bad\\20260519_013603_bad.png",
+        "label": "bad"
+      },
+      {
+        "image": "D:\\bosch_project\\workspace\\new_PCB_nan\\resistor_detector\\detection_results\\bottom_chip\\bad\\20260519_074538_bad.png",
+        "label": "bad"
+      },
+      {
+        "image": "D:\\bosch_project\\workspace\\new_PCB_nan\\resistor_detector\\detection_results\\bottom_chip\\bad\\20260519_074640_bad.png",
+        "label": "bad"
+      },
+      {
+        "image": "D:\\bosch_project\\workspace\\new_PCB_nan\\resistor_detector\\detection_results\\bottom_chip\\bad\\20260519_075007_bad.png",
+        "label": "bad"
+      },
+      {
+        "image": "D:\\bosch_project\\workspace\\new_PCB_nan\\resistor_detector\\detection_results\\bottom_chip\\bad\\20260519_075056_good.png",
+        "label": "bad"
+      },
+      {
+        "image": "D:\\bosch_project\\workspace\\new_PCB_nan\\resistor_detector\\detection_results\\bottom_chip\\bad\\20260519_075216_bad.png",
+        "label": "bad"
+      },
+      {
+        "image": "D:\\bosch_project\\workspace\\new_PCB_nan\\resistor_detector\\detection_results\\bottom_chip\\bad\\20260519_075326_bad.png",
+        "label": "bad"
+      },
+      {
+        "image": "D:\\bosch_project\\workspace\\new_PCB_nan\\resistor_detector\\detection_results\\bottom_chip\\bad\\20260519_075421_bad.png",
+        "label": "bad"
+      },
+      {
+        "image": "D:\\bosch_project\\workspace\\new_PCB_nan\\resistor_detector\\detection_results\\bottom_chip\\bad\\20260519_075931_good.png",
+        "label": "bad"
+      },
+      {
+        "image": "D:\\bosch_project\\workspace\\new_PCB_nan\\resistor_detector\\detection_results\\bottom_chip\\bad\\20260519_081421_bad.png",
+        "label": "bad"
+      },
+      {
+        "image": "D:\\bosch_project\\workspace\\new_PCB_nan\\resistor_detector\\detection_results\\bottom_chip\\bad\\20260519_084307_bad.png",
+        "label": "bad"
+      },
+      {
+        "image": "D:\\bosch_project\\workspace\\new_PCB_nan\\resistor_detector\\detection_results\\bottom_chip\\bad\\20260519_085509_bad.png",
+        "label": "bad"
+      },
+      {
+        "image": "D:\\bosch_project\\workspace\\new_PCB_nan\\resistor_detector\\detection_results\\bottom_chip\\bad\\20260519_092116_good.png",
+        "label": "bad"
+      },
+      {
+        "image": "D:\\bosch_project\\workspace\\new_PCB_nan\\resistor_detector\\detection_results\\bottom_chip\\bad\\20260519_093330_good.png",
+        "label": "bad"
+      },
+      {
+        "image": "D:\\bosch_project\\workspace\\new_PCB_nan\\resistor_detector\\detection_results\\bottom_chip\\bad\\20260519_105658_399570.png",
+        "label": "bad"
+      },
+      {
+        "image": "D:\\bosch_project\\workspace\\new_PCB_nan\\resistor_detector\\detection_results\\bottom_chip\\bad\\20260519_105923_615098.png",
+        "label": "bad"
+      },
+      {
+        "image": "D:\\bosch_project\\workspace\\new_PCB_nan\\resistor_detector\\detection_results\\bottom_chip\\bad\\20260519_112738_965032.png",
+        "label": "bad"
+      },
+      {
+        "image": "D:\\bosch_project\\workspace\\new_PCB_nan\\resistor_detector\\detection_results\\bottom_chip\\bad\\20260519_113121_good.png",
+        "label": "bad"
+      },
+      {
+        "image": "D:\\bosch_project\\workspace\\new_PCB_nan\\resistor_detector\\detection_results\\bottom_chip\\bad\\20260519_113159_good.png",
+        "label": "bad"
+      },
+      {
+        "image": "D:\\bosch_project\\workspace\\new_PCB_nan\\resistor_detector\\detection_results\\bottom_chip\\bad\\20260519_125956_good.png",
+        "label": "bad"
+      },
+      {
+        "image": "D:\\bosch_project\\workspace\\new_PCB_nan\\resistor_detector\\detection_results\\bottom_chip\\bad\\20260519_130100_good.png",
+        "label": "bad"
+      },
+      {
+        "image": "D:\\bosch_project\\workspace\\new_PCB_nan\\resistor_detector\\detection_results\\bottom_chip\\bad\\20260519_130612_good.png",
+        "label": "bad"
+      },
+      {
+        "image": "D:\\bosch_project\\workspace\\new_PCB_nan\\resistor_detector\\detection_results\\bottom_chip\\bad\\20260519_130708_good.png",
+        "label": "bad"
+      },
+      {
+        "image": "D:\\bosch_project\\workspace\\new_PCB_nan\\resistor_detector\\detection_results\\bottom_chip\\bad\\20260519_130745_good.png",
+        "label": "bad"
+      },
+      {
+        "image": "D:\\bosch_project\\workspace\\new_PCB_nan\\resistor_detector\\detection_results\\bottom_chip\\bad\\20260519_130832_good.png",
+        "label": "bad"
+      },
+      {
+        "image": "D:\\bosch_project\\workspace\\new_PCB_nan\\resistor_detector\\detection_results\\bottom_chip\\bad\\20260519_130931_good.png",
+        "label": "bad"
+      },
+      {
+        "image": "D:\\bosch_project\\workspace\\new_PCB_nan\\resistor_detector\\detection_results\\bottom_chip\\bad\\20260519_130956_good.png",
+        "label": "bad"
+      },
+      {
+        "image": "D:\\bosch_project\\workspace\\new_PCB_nan\\resistor_detector\\detection_results\\bottom_chip\\bad\\20260519_131022_good.png",
+        "label": "bad"
+      },
+      {
+        "image": "D:\\bosch_project\\workspace\\new_PCB_nan\\resistor_detector\\detection_results\\bottom_chip\\bad\\20260519_131054_good.png",
+        "label": "bad"
+      },
+      {
+        "image": "D:\\bosch_project\\workspace\\new_PCB_nan\\resistor_detector\\detection_results\\bottom_chip\\bad\\20260519_131114_good.png",
+        "label": "bad"
+      },
+      {
+        "image": "D:\\bosch_project\\workspace\\new_PCB_nan\\resistor_detector\\detection_results\\bottom_chip\\bad\\20260519_131142_good.png",
+        "label": "bad"
+      },
+      {
+        "image": "D:\\bosch_project\\workspace\\new_PCB_nan\\resistor_detector\\detection_results\\bottom_chip\\bad\\20260519_131158_good.png",
+        "label": "bad"
+      },
+      {
+        "image": "D:\\bosch_project\\workspace\\new_PCB_nan\\resistor_detector\\detection_results\\bottom_chip\\bad\\20260519_131221_good.png",
+        "label": "bad"
+      },
+      {
+        "image": "D:\\bosch_project\\workspace\\new_PCB_nan\\resistor_detector\\detection_results\\bottom_chip\\bad\\20260519_131302_good.png",
+        "label": "bad"
+      },
+      {
+        "image": "D:\\bosch_project\\workspace\\new_PCB_nan\\resistor_detector\\detection_results\\bottom_chip\\bad\\20260519_131339_good.png",
+        "label": "bad"
+      },
+      {
+        "image": "D:\\bosch_project\\workspace\\new_PCB_nan\\resistor_detector\\detection_results\\bottom_chip\\bad\\20260519_131359_good.png",
+        "label": "bad"
+      },
+      {
+        "image": "D:\\bosch_project\\workspace\\new_PCB_nan\\resistor_detector\\detection_results\\bottom_chip\\bad\\20260519_131418_good.png",
+        "label": "bad"
+      },
+      {
+        "image": "D:\\bosch_project\\workspace\\new_PCB_nan\\resistor_detector\\detection_results\\bottom_chip\\bad\\20260519_131435_good.png",
+        "label": "bad"
+      },
+      {
+        "image": "D:\\bosch_project\\workspace\\new_PCB_nan\\resistor_detector\\detection_results\\bottom_chip\\bad\\20260519_131459_good.png",
+        "label": "bad"
+      },
+      {
+        "image": "D:\\bosch_project\\workspace\\new_PCB_nan\\resistor_detector\\detection_results\\bottom_chip\\bad\\20260519_131819_210394.png",
+        "label": "bad"
+      },
+      {
+        "image": "D:\\bosch_project\\workspace\\new_PCB_nan\\resistor_detector\\detection_results\\bottom_chip\\bad\\20260519_131939_good.png",
+        "label": "bad"
+      },
+      {
+        "image": "D:\\bosch_project\\workspace\\new_PCB_nan\\resistor_detector\\detection_results\\bottom_chip\\bad\\20260519_131959_good.png",
+        "label": "bad"
+      },
+      {
+        "image": "D:\\bosch_project\\workspace\\new_PCB_nan\\resistor_detector\\detection_results\\bottom_chip\\bad\\20260519_132006_035850.png",
+        "label": "bad"
+      },
+      {
+        "image": "D:\\bosch_project\\workspace\\new_PCB_nan\\resistor_detector\\detection_results\\bottom_chip\\bad\\20260519_132036_good.png",
+        "label": "bad"
+      },
+      {
+        "image": "D:\\bosch_project\\workspace\\new_PCB_nan\\resistor_detector\\detection_results\\bottom_chip\\bad\\20260519_132103_good.png",
+        "label": "bad"
+      },
+      {
+        "image": "D:\\bosch_project\\workspace\\new_PCB_nan\\resistor_detector\\detection_results\\bottom_chip\\bad\\20260519_132131_good.png",
+        "label": "bad"
+      },
+      {
+        "image": "D:\\bosch_project\\workspace\\new_PCB_nan\\resistor_detector\\detection_results\\bottom_chip\\bad\\20260519_132152_good.png",
+        "label": "bad"
+      },
+      {
+        "image": "D:\\bosch_project\\workspace\\new_PCB_nan\\resistor_detector\\detection_results\\bottom_chip\\bad\\20260519_132223_good.png",
+        "label": "bad"
+      },
+      {
+        "image": "D:\\bosch_project\\workspace\\new_PCB_nan\\resistor_detector\\detection_results\\bottom_chip\\bad\\20260519_132242_good.png",
+        "label": "bad"
+      },
+      {
+        "image": "D:\\bosch_project\\workspace\\new_PCB_nan\\resistor_detector\\detection_results\\bottom_chip\\bad\\20260519_132304_good.png",
+        "label": "bad"
+      },
+      {
+        "image": "D:\\bosch_project\\workspace\\new_PCB_nan\\resistor_detector\\detection_results\\bottom_chip\\bad\\20260519_132331_good.png",
+        "label": "bad"
+      },
+      {
+        "image": "D:\\bosch_project\\workspace\\new_PCB_nan\\resistor_detector\\detection_results\\bottom_chip\\bad\\20260519_132356_good.png",
+        "label": "bad"
+      },
+      {
+        "image": "D:\\bosch_project\\workspace\\new_PCB_nan\\resistor_detector\\detection_results\\bottom_chip\\bad\\20260519_132414_good.png",
+        "label": "bad"
+      }
+    ],
+    "evaluation": {
+      "mode": "stratified_kfold",
+      "folds": 5,
+      "fold_summaries": [
+        {
+          "sample_count": 15,
+          "confusion": {
+            "good_as_good": 3,
+            "good_as_bad": 0,
+            "bad_as_good": 0,
+            "bad_as_bad": 12
+          },
+          "metrics": {
+            "accuracy": 1.0,
+            "precision_good": 1.0,
+            "recall_good": 1.0,
+            "f1_good": 1.0,
+            "precision_bad": 1.0,
+            "recall_bad": 1.0,
+            "f1_bad": 1.0
+          },
+          "raw_scores": [
+            -0.567227,
+            -0.557613,
+            -0.47148,
+            0.849218,
+            1.05165,
+            1.171922,
+            0.748011,
+            1.178874,
+            0.878851,
+            1.152976,
+            1.01103,
+            1.117529,
+            0.9448,
+            1.178784,
+            0.954042
+          ],
+          "validation_items": [
+            {
+              "image": "D:\\bosch_project\\workspace\\new_PCB_nan\\resistor_detector\\detection_results\\bottom_chip\\good\\20260519_131712_383219.png",
+              "truth": "good",
+              "prediction": "good"
+            },
+            {
+              "image": "D:\\bosch_project\\workspace\\new_PCB_nan\\resistor_detector\\detection_results\\bottom_chip\\good\\20260519_131653_290840.png",
+              "truth": "good",
+              "prediction": "good"
+            },
+            {
+              "image": "D:\\bosch_project\\workspace\\new_PCB_nan\\resistor_detector\\detection_results\\bottom_chip\\good\\20260519_132700_good.png",
+              "truth": "good",
+              "prediction": "good"
+            },
+            {
+              "image": "D:\\bosch_project\\workspace\\new_PCB_nan\\resistor_detector\\detection_results\\bottom_chip\\bad\\20260519_112738_965032.png",
+              "truth": "bad",
+              "prediction": "bad"
+            },
+            {
+              "image": "D:\\bosch_project\\workspace\\new_PCB_nan\\resistor_detector\\detection_results\\bottom_chip\\bad\\20260519_013603_bad.png",
+              "truth": "bad",
+              "prediction": "bad"
+            },
+            {
+              "image": "D:\\bosch_project\\workspace\\new_PCB_nan\\resistor_detector\\detection_results\\bottom_chip\\bad\\20260519_132103_good.png",
+              "truth": "bad",
+              "prediction": "bad"
+            },
+            {
+              "image": "D:\\bosch_project\\workspace\\new_PCB_nan\\resistor_detector\\detection_results\\bottom_chip\\bad\\20260519_113159_good.png",
+              "truth": "bad",
+              "prediction": "bad"
+            },
+            {
+              "image": "D:\\bosch_project\\workspace\\new_PCB_nan\\resistor_detector\\detection_results\\bottom_chip\\bad\\20260519_131939_good.png",
+              "truth": "bad",
+              "prediction": "bad"
+            },
+            {
+              "image": "D:\\bosch_project\\workspace\\new_PCB_nan\\resistor_detector\\detection_results\\bottom_chip\\bad\\20260519_131418_good.png",
+              "truth": "bad",
+              "prediction": "bad"
+            },
+            {
+              "image": "D:\\bosch_project\\workspace\\new_PCB_nan\\resistor_detector\\detection_results\\bottom_chip\\bad\\20260519_013039_bad.png",
+              "truth": "bad",
+              "prediction": "bad"
+            },
+            {
+              "image": "D:\\bosch_project\\workspace\\new_PCB_nan\\resistor_detector\\detection_results\\bottom_chip\\bad\\20260519_105658_399570.png",
+              "truth": "bad",
+              "prediction": "bad"
+            },
+            {
+              "image": "D:\\bosch_project\\workspace\\new_PCB_nan\\resistor_detector\\detection_results\\bottom_chip\\bad\\20260519_132414_good.png",
+              "truth": "bad",
+              "prediction": "bad"
+            },
+            {
+              "image": "D:\\bosch_project\\workspace\\new_PCB_nan\\resistor_detector\\detection_results\\bottom_chip\\bad\\20260519_131435_good.png",
+              "truth": "bad",
+              "prediction": "bad"
+            },
+            {
+              "image": "D:\\bosch_project\\workspace\\new_PCB_nan\\resistor_detector\\detection_results\\bottom_chip\\bad\\20260519_132304_good.png",
+              "truth": "bad",
+              "prediction": "bad"
+            },
+            {
+              "image": "D:\\bosch_project\\workspace\\new_PCB_nan\\resistor_detector\\detection_results\\bottom_chip\\bad\\20260519_013415_bad.png",
+              "truth": "bad",
+              "prediction": "bad"
+            }
+          ],
+          "train_sample_count_before_balance": 56,
+          "train_sample_count_after_balance": 96,
+          "fold_index": 0
+        },
+        {
+          "sample_count": 14,
+          "confusion": {
+            "good_as_good": 2,
+            "good_as_bad": 0,
+            "bad_as_good": 0,
+            "bad_as_bad": 12
+          },
+          "metrics": {
+            "accuracy": 1.0,
+            "precision_good": 1.0,
+            "recall_good": 1.0,
+            "f1_good": 1.0,
+            "precision_bad": 1.0,
+            "recall_bad": 1.0,
+            "f1_bad": 1.0
+          },
+          "raw_scores": [
+            -1.0,
+            -1.176269,
+            0.991866,
+            0.943552,
+            1.072044,
+            1.08843,
+            0.914706,
+            1.100885,
+            0.708037,
+            1.083786,
+            0.975951,
+            1.116472,
+            0.930329,
+            1.02303
+          ],
+          "validation_items": [
+            {
+              "image": "D:\\bosch_project\\workspace\\new_PCB_nan\\resistor_detector\\detection_results\\bottom_chip\\good\\20260519_112546_383595.png",
+              "truth": "good",
+              "prediction": "good"
+            },
+            {
+              "image": "D:\\bosch_project\\workspace\\new_PCB_nan\\resistor_detector\\detection_results\\bottom_chip\\good\\20260519_132626_good.png",
+              "truth": "good",
+              "prediction": "good"
+            },
+            {
+              "image": "D:\\bosch_project\\workspace\\new_PCB_nan\\resistor_detector\\detection_results\\bottom_chip\\bad\\20260519_093330_good.png",
+              "truth": "bad",
+              "prediction": "bad"
+            },
+            {
+              "image": "D:\\bosch_project\\workspace\\new_PCB_nan\\resistor_detector\\detection_results\\bottom_chip\\bad\\20260519_013507_bad.png",
+              "truth": "bad",
+              "prediction": "bad"
+            },
+            {
+              "image": "D:\\bosch_project\\workspace\\new_PCB_nan\\resistor_detector\\detection_results\\bottom_chip\\bad\\20260519_105923_615098.png",
+              "truth": "bad",
+              "prediction": "bad"
+            },
+            {
+              "image": "D:\\bosch_project\\workspace\\new_PCB_nan\\resistor_detector\\detection_results\\bottom_chip\\bad\\20260519_130956_good.png",
+              "truth": "bad",
+              "prediction": "bad"
+            },
+            {
+              "image": "D:\\bosch_project\\workspace\\new_PCB_nan\\resistor_detector\\detection_results\\bottom_chip\\bad\\20260519_131359_good.png",
+              "truth": "bad",
+              "prediction": "bad"
+            },
+            {
+              "image": "D:\\bosch_project\\workspace\\new_PCB_nan\\resistor_detector\\detection_results\\bottom_chip\\bad\\20260519_075056_good.png",
+              "truth": "bad",
+              "prediction": "bad"
+            },
+            {
+              "image": "D:\\bosch_project\\workspace\\new_PCB_nan\\resistor_detector\\detection_results\\bottom_chip\\bad\\20260519_132006_035850.png",
+              "truth": "bad",
+              "prediction": "bad"
+            },
+            {
+              "image": "D:\\bosch_project\\workspace\\new_PCB_nan\\resistor_detector\\detection_results\\bottom_chip\\bad\\20260519_132356_good.png",
+              "truth": "bad",
+              "prediction": "bad"
+            },
+            {
+              "image": "D:\\bosch_project\\workspace\\new_PCB_nan\\resistor_detector\\detection_results\\bottom_chip\\bad\\20260519_130612_good.png",
+              "truth": "bad",
+              "prediction": "bad"
+            },
+            {
+              "image": "D:\\bosch_project\\workspace\\new_PCB_nan\\resistor_detector\\detection_results\\bottom_chip\\bad\\20260519_131339_good.png",
+              "truth": "bad",
+              "prediction": "bad"
+            },
+            {
+              "image": "D:\\bosch_project\\workspace\\new_PCB_nan\\resistor_detector\\detection_results\\bottom_chip\\bad\\20260519_131158_good.png",
+              "truth": "bad",
+              "prediction": "bad"
+            },
+            {
+              "image": "D:\\bosch_project\\workspace\\new_PCB_nan\\resistor_detector\\detection_results\\bottom_chip\\bad\\20260519_012232_bad.png",
+              "truth": "bad",
+              "prediction": "bad"
+            }
+          ],
+          "train_sample_count_before_balance": 57,
+          "train_sample_count_after_balance": 96,
+          "fold_index": 1
+        },
+        {
+          "sample_count": 14,
+          "confusion": {
+            "good_as_good": 1,
+            "good_as_bad": 1,
+            "bad_as_good": 0,
+            "bad_as_bad": 12
+          },
+          "metrics": {
+            "accuracy": 0.928571,
+            "precision_good": 1.0,
+            "recall_good": 0.5,
+            "f1_good": 0.666667,
+            "precision_bad": 0.923077,
+            "recall_bad": 1.0,
+            "f1_bad": 0.96
+          },
+          "raw_scores": [
+            0.856022,
+            -1.0,
+            1.042138,
+            1.026379,
+            1.02928,
+            1.005149,
+            1.101963,
+            1.062309,
+            1.116964,
+            1.0,
+            0.967609,
+            1.15252,
+            1.023089,
+            0.948542
+          ],
+          "validation_items": [
+            {
+              "image": "D:\\bosch_project\\workspace\\new_PCB_nan\\resistor_detector\\detection_results\\bottom_chip\\good\\20260519_112521_098073.png",
+              "truth": "good",
+              "prediction": "bad"
+            },
+            {
+              "image": "D:\\bosch_project\\workspace\\new_PCB_nan\\resistor_detector\\detection_results\\bottom_chip\\good\\20260519_112552_504559.png",
+              "truth": "good",
+              "prediction": "good"
+            },
+            {
+              "image": "D:\\bosch_project\\workspace\\new_PCB_nan\\resistor_detector\\detection_results\\bottom_chip\\bad\\20260519_132242_good.png",
+              "truth": "bad",
+              "prediction": "bad"
+            },
+            {
+              "image": "D:\\bosch_project\\workspace\\new_PCB_nan\\resistor_detector\\detection_results\\bottom_chip\\bad\\20260519_085509_bad.png",
+              "truth": "bad",
+              "prediction": "bad"
+            },
+            {
+              "image": "D:\\bosch_project\\workspace\\new_PCB_nan\\resistor_detector\\detection_results\\bottom_chip\\bad\\20260519_075931_good.png",
+              "truth": "bad",
+              "prediction": "bad"
+            },
+            {
+              "image": "D:\\bosch_project\\workspace\\new_PCB_nan\\resistor_detector\\detection_results\\bottom_chip\\bad\\20260519_130708_good.png",
+              "truth": "bad",
+              "prediction": "bad"
+            },
+            {
+              "image": "D:\\bosch_project\\workspace\\new_PCB_nan\\resistor_detector\\detection_results\\bottom_chip\\bad\\20260519_132036_good.png",
+              "truth": "bad",
+              "prediction": "bad"
+            },
+            {
+              "image": "D:\\bosch_project\\workspace\\new_PCB_nan\\resistor_detector\\detection_results\\bottom_chip\\bad\\20260519_130745_good.png",
+              "truth": "bad",
+              "prediction": "bad"
+            },
+            {
+              "image": "D:\\bosch_project\\workspace\\new_PCB_nan\\resistor_detector\\detection_results\\bottom_chip\\bad\\20260519_132223_good.png",
+              "truth": "bad",
+              "prediction": "bad"
+            },
+            {
+              "image": "D:\\bosch_project\\workspace\\new_PCB_nan\\resistor_detector\\detection_results\\bottom_chip\\bad\\20260519_075007_bad.png",
+              "truth": "bad",
+              "prediction": "bad"
+            },
+            {
+              "image": "D:\\bosch_project\\workspace\\new_PCB_nan\\resistor_detector\\detection_results\\bottom_chip\\bad\\20260519_132152_good.png",
+              "truth": "bad",
+              "prediction": "bad"
+            },
+            {
+              "image": "D:\\bosch_project\\workspace\\new_PCB_nan\\resistor_detector\\detection_results\\bottom_chip\\bad\\20260519_131459_good.png",
+              "truth": "bad",
+              "prediction": "bad"
+            },
+            {
+              "image": "D:\\bosch_project\\workspace\\new_PCB_nan\\resistor_detector\\detection_results\\bottom_chip\\bad\\20260519_130931_good.png",
+              "truth": "bad",
+              "prediction": "bad"
+            },
+            {
+              "image": "D:\\bosch_project\\workspace\\new_PCB_nan\\resistor_detector\\detection_results\\bottom_chip\\bad\\20260519_012824_bad.png",
+              "truth": "bad",
+              "prediction": "bad"
+            }
+          ],
+          "train_sample_count_before_balance": 57,
+          "train_sample_count_after_balance": 96,
+          "fold_index": 2
+        },
+        {
+          "sample_count": 14,
+          "confusion": {
+            "good_as_good": 2,
+            "good_as_bad": 0,
+            "bad_as_good": 0,
+            "bad_as_bad": 12
+          },
+          "metrics": {
+            "accuracy": 1.0,
+            "precision_good": 1.0,
+            "recall_good": 1.0,
+            "f1_good": 1.0,
+            "precision_bad": 1.0,
+            "recall_bad": 1.0,
+            "f1_bad": 1.0
+          },
+          "raw_scores": [
+            -0.325682,
+            -0.877087,
+            0.899033,
+            1.060407,
+            0.973972,
+            0.866111,
+            1.130519,
+            0.999999,
+            1.000001,
+            1.070263,
+            1.05236,
+            1.100656,
+            1.055694,
+            0.937562
+          ],
+          "validation_items": [
+            {
+              "image": "D:\\bosch_project\\workspace\\new_PCB_nan\\resistor_detector\\detection_results\\bottom_chip\\good\\20260519_131733_045606.png",
+              "truth": "good",
+              "prediction": "good"
+            },
+            {
+              "image": "D:\\bosch_project\\workspace\\new_PCB_nan\\resistor_detector\\detection_results\\bottom_chip\\good\\20260519_112428_089142.png",
+              "truth": "good",
+              "prediction": "good"
+            },
+            {
+              "image": "D:\\bosch_project\\workspace\\new_PCB_nan\\resistor_detector\\detection_results\\bottom_chip\\bad\\20260519_130832_good.png",
+              "truth": "bad",
+              "prediction": "bad"
+            },
+            {
+              "image": "D:\\bosch_project\\workspace\\new_PCB_nan\\resistor_detector\\detection_results\\bottom_chip\\bad\\20260519_013257_bad.png",
+              "truth": "bad",
+              "prediction": "bad"
+            },
+            {
+              "image": "D:\\bosch_project\\workspace\\new_PCB_nan\\resistor_detector\\detection_results\\bottom_chip\\bad\\20260519_113121_good.png",
+              "truth": "bad",
+              "prediction": "bad"
+            },
+            {
+              "image": "D:\\bosch_project\\workspace\\new_PCB_nan\\resistor_detector\\detection_results\\bottom_chip\\bad\\20260519_131819_210394.png",
+              "truth": "bad",
+              "prediction": "bad"
+            },
+            {
+              "image": "D:\\bosch_project\\workspace\\new_PCB_nan\\resistor_detector\\detection_results\\bottom_chip\\bad\\20260519_074538_bad.png",
+              "truth": "bad",
+              "prediction": "bad"
+            },
+            {
+              "image": "D:\\bosch_project\\workspace\\new_PCB_nan\\resistor_detector\\detection_results\\bottom_chip\\bad\\20260519_131959_good.png",
+              "truth": "bad",
+              "prediction": "bad"
+            },
+            {
+              "image": "D:\\bosch_project\\workspace\\new_PCB_nan\\resistor_detector\\detection_results\\bottom_chip\\bad\\20260519_074640_bad.png",
+              "truth": "bad",
+              "prediction": "bad"
+            },
+            {
+              "image": "D:\\bosch_project\\workspace\\new_PCB_nan\\resistor_detector\\detection_results\\bottom_chip\\bad\\20260519_012111_bad.png",
+              "truth": "bad",
+              "prediction": "bad"
+            },
+            {
+              "image": "D:\\bosch_project\\workspace\\new_PCB_nan\\resistor_detector\\detection_results\\bottom_chip\\bad\\20260519_125956_good.png",
+              "truth": "bad",
+              "prediction": "bad"
+            },
+            {
+              "image": "D:\\bosch_project\\workspace\\new_PCB_nan\\resistor_detector\\detection_results\\bottom_chip\\bad\\20260519_075216_bad.png",
+              "truth": "bad",
+              "prediction": "bad"
+            },
+            {
+              "image": "D:\\bosch_project\\workspace\\new_PCB_nan\\resistor_detector\\detection_results\\bottom_chip\\bad\\20260519_075421_bad.png",
+              "truth": "bad",
+              "prediction": "bad"
+            },
+            {
+              "image": "D:\\bosch_project\\workspace\\new_PCB_nan\\resistor_detector\\detection_results\\bottom_chip\\bad\\20260519_130100_good.png",
+              "truth": "bad",
+              "prediction": "bad"
+            }
+          ],
+          "train_sample_count_before_balance": 57,
+          "train_sample_count_after_balance": 96,
+          "fold_index": 3
+        },
+        {
+          "sample_count": 14,
+          "confusion": {
+            "good_as_good": 2,
+            "good_as_bad": 0,
+            "bad_as_good": 0,
+            "bad_as_bad": 12
+          },
+          "metrics": {
+            "accuracy": 1.0,
+            "precision_good": 1.0,
+            "recall_good": 1.0,
+            "f1_good": 1.0,
+            "precision_bad": 1.0,
+            "recall_bad": 1.0,
+            "f1_bad": 1.0
+          },
+          "raw_scores": [
+            -0.863164,
+            -0.470437,
+            1.146323,
+            1.20512,
+            1.137787,
+            1.03893,
+            0.889939,
+            1.073358,
+            0.678295,
+            1.009446,
+            0.662965,
+            0.703779,
+            1.096356,
+            0.986464
+          ],
+          "validation_items": [
+            {
+              "image": "D:\\bosch_project\\workspace\\new_PCB_nan\\resistor_detector\\detection_results\\bottom_chip\\good\\20260519_131630_695743.png",
+              "truth": "good",
+              "prediction": "good"
+            },
+            {
+              "image": "D:\\bosch_project\\workspace\\new_PCB_nan\\resistor_detector\\detection_results\\bottom_chip\\good\\20260519_112452_810575.png",
+              "truth": "good",
+              "prediction": "good"
+            },
+            {
+              "image": "D:\\bosch_project\\workspace\\new_PCB_nan\\resistor_detector\\detection_results\\bottom_chip\\bad\\20260519_131302_good.png",
+              "truth": "bad",
+              "prediction": "bad"
+            },
+            {
+              "image": "D:\\bosch_project\\workspace\\new_PCB_nan\\resistor_detector\\detection_results\\bottom_chip\\bad\\20260519_132131_good.png",
+              "truth": "bad",
+              "prediction": "bad"
+            },
+            {
+              "image": "D:\\bosch_project\\workspace\\new_PCB_nan\\resistor_detector\\detection_results\\bottom_chip\\bad\\20260519_081421_bad.png",
+              "truth": "bad",
+              "prediction": "bad"
+            },
+            {
+              "image": "D:\\bosch_project\\workspace\\new_PCB_nan\\resistor_detector\\detection_results\\bottom_chip\\bad\\20260519_131114_good.png",
+              "truth": "bad",
+              "prediction": "bad"
+            },
+            {
+              "image": "D:\\bosch_project\\workspace\\new_PCB_nan\\resistor_detector\\detection_results\\bottom_chip\\bad\\20260519_092116_good.png",
+              "truth": "bad",
+              "prediction": "bad"
+            },
+            {
+              "image": "D:\\bosch_project\\workspace\\new_PCB_nan\\resistor_detector\\detection_results\\bottom_chip\\bad\\20260519_132331_good.png",
+              "truth": "bad",
+              "prediction": "bad"
+            },
+            {
+              "image": "D:\\bosch_project\\workspace\\new_PCB_nan\\resistor_detector\\detection_results\\bottom_chip\\bad\\20260519_131221_good.png",
+              "truth": "bad",
+              "prediction": "bad"
+            },
+            {
+              "image": "D:\\bosch_project\\workspace\\new_PCB_nan\\resistor_detector\\detection_results\\bottom_chip\\bad\\20260519_084307_bad.png",
+              "truth": "bad",
+              "prediction": "bad"
+            },
+            {
+              "image": "D:\\bosch_project\\workspace\\new_PCB_nan\\resistor_detector\\detection_results\\bottom_chip\\bad\\20260519_131022_good.png",
+              "truth": "bad",
+              "prediction": "bad"
+            },
+            {
+              "image": "D:\\bosch_project\\workspace\\new_PCB_nan\\resistor_detector\\detection_results\\bottom_chip\\bad\\20260519_131054_good.png",
+              "truth": "bad",
+              "prediction": "bad"
+            },
+            {
+              "image": "D:\\bosch_project\\workspace\\new_PCB_nan\\resistor_detector\\detection_results\\bottom_chip\\bad\\20260519_075326_bad.png",
+              "truth": "bad",
+              "prediction": "bad"
+            },
+            {
+              "image": "D:\\bosch_project\\workspace\\new_PCB_nan\\resistor_detector\\detection_results\\bottom_chip\\bad\\20260519_131142_good.png",
+              "truth": "bad",
+              "prediction": "bad"
+            }
+          ],
+          "train_sample_count_before_balance": 57,
+          "train_sample_count_after_balance": 96,
+          "fold_index": 4
+        }
+      ],
+      "mean_metrics": {
+        "accuracy": 0.985714,
+        "precision_good": 1.0,
+        "recall_good": 0.9,
+        "f1_good": 0.933333,
+        "precision_bad": 0.984615,
+        "recall_bad": 1.0,
+        "f1_bad": 0.992
+      }
+    }
+  }
+}

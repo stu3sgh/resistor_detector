@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <title>检测结果浏览</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --bg: #0a0a0f; --bg2: #12121a; --card: #1a1a2e;
+            --text: #e8e8e8; --text2: #8888aa; --accent: #4fc3f7;
+            --border: #2a2a3e; --good: #51cf66; --bad: #ff6b6b;
+        }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+        .header { background: var(--bg2); border-bottom: 1px solid var(--border); padding: 14px 20px; position: sticky; top: 0; z-index: 100; }
+        .header a { color: var(--text2); text-decoration: none; font-size: 14px; }
+        .header a:hover { color: var(--accent); }
+        .header h1 { font-size: 18px; font-weight: 600; display: inline; margin-left: 12px; }
+        .header h1 span { color: var(--accent); }
+
+        .breadcrumb { padding: 12px 20px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; font-size: 13px; background: var(--bg2); border-bottom: 1px solid var(--border); }
+        .breadcrumb a { color: var(--accent); text-decoration: none; cursor: pointer; }
+        .breadcrumb a:hover { text-decoration: underline; }
+        .breadcrumb .sep { color: var(--text2); }
+        .breadcrumb .current { color: var(--text); font-weight: 600; }
+        .badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; margin-left: 8px; }
+        .badge.good { background: rgba(81,207,102,0.15); color: var(--good); }
+        .badge.bad { background: rgba(255,107,107,0.15); color: var(--bad); }
+
+        .toolbar { padding: 12px 20px; display: flex; gap: 8px; align-items: center; border-bottom: 1px solid var(--border); background: var(--bg2); }
+        .count { font-size: 13px; color: var(--text2); }
+
+        .subdirs { display: flex; gap: 8px; padding: 16px 20px; flex-wrap: wrap; }
+        .subdir-btn {
+            padding: 10px 20px; border-radius: 10px; border: 1px solid var(--border);
+            background: var(--card); color: var(--text); font-size: 14px; font-weight: 600;
+            cursor: pointer; transition: all 0.2s; text-decoration: none; display: flex; align-items: center; gap: 8px;
+        }
+        .subdir-btn:hover { border-color: var(--accent); background: rgba(79,195,247,0.08); }
+        .subdir-btn .cnt { font-size: 12px; color: var(--text2); font-weight: 400; }
+
+        .gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; padding: 16px 20px; }
+        .gallery-item {
+            aspect-ratio: 1; border-radius: 10px; overflow: hidden; border: 1px solid var(--border);
+            cursor: pointer; transition: all 0.2s; position: relative; background: var(--bg2);
+        }
+        .gallery-item:hover { border-color: var(--accent); transform: translateY(-2px); box-shadow: 0 4px 16px rgba(0,0,0,0.3); }
+        .gallery-item img { width: 100%; height: 100%; object-fit: cover; }
+        .gallery-item .fname {
+            position: absolute; bottom: 0; left: 0; right: 0; padding: 6px 8px;
+            background: linear-gradient(transparent, rgba(0,0,0,0.8)); font-size: 10px;
+            color: #ccc; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+
+        .empty { text-align: center; padding: 60px 20px; color: var(--text2); font-size: 15px; }
+
+        /* Lightbox */
+        .lightbox {
+            display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.92); z-index: 200; align-items: center; justify-content: center;
+            flex-direction: column;
+        }
+        .lightbox.active { display: flex; }
+        .lightbox img { max-width: 95%; max-height: 85vh; border-radius: 8px; object-fit: contain; }
+        .lightbox .lb-info { padding: 12px; text-align: center; font-size: 13px; color: var(--text2); }
+        .lightbox .lb-close {
+            position: absolute; top: 16px; right: 20px; font-size: 28px; color: #fff;
+            cursor: pointer; background: none; border: none; z-index: 201; opacity: 0.7;
+        }
+        .lightbox .lb-close:hover { opacity: 1; }
+        .lightbox .lb-nav {
+            position: absolute; top: 50%; transform: translateY(-50%);
+            font-size: 36px; color: #fff; cursor: pointer; background: rgba(0,0,0,0.4);
+            border: none; padding: 12px 16px; border-radius: 8px; opacity: 0.6;
+        }
+        .lightbox .lb-nav:hover { opacity: 1; }
+        .lightbox .lb-prev { left: 12px; }
+        .lightbox .lb-next { right: 12px; }
+
+        @media (max-width: 480px) {
+            .gallery { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 8px; padding: 12px; }
+            .header h1 { font-size: 16px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <a href="/resistor/">← 返回首页</a>
+        <h1>📁 检测结果<span>浏览</span></h1>
+    </div>
+    <div class="breadcrumb" id="breadcrumb"></div>
+    <div class="toolbar">
+        <span class="count" id="count"></span>
+    </div>
+    <div class="subdirs" id="subdirs"></div>
+    <div class="gallery" id="gallery"></div>
+    <div class="empty" id="empty" style="display:none">此目录下暂无图片</div>
+
+    <!-- Lightbox -->
+    <div class="lightbox" id="lightbox">
+        <button class="lb-close" id="lbClose">✕</button>
+        <button class="lb-nav lb-prev" id="lbPrev">‹</button>
+        <button class="lb-nav lb-next" id="lbNext">›</button>
+        <img id="lbImg" src="" alt="">
+        <div class="lb-info" id="lbInfo"></div>
+    </div>
+
+    <script>
+    (() => {
+        const API = '/resistor/api';
+        const BASE = '/resistor/detection_results/';
+        const $ = id => document.getElementById(id);
+
+        let currentFiles = [];
+        let currentIdx = 0;
+        let currentDir = '';
+
+        // Parse path from URL hash or query
+        function getPath() {
+            // URL like /resistor/detection_results/smd_components/good/
+            const p = location.pathname;
+            const prefix = '/resistor/detection_results/';
+            if (p.startsWith(prefix)) {
+                return decodeURIComponent(p.slice(prefix.length)).replace(/\/+$/, '');
+            }
+            return '';
+        }
+
+        async function loadDir(dir) {
+            currentDir = dir;
+            $('gallery').innerHTML = '';
+            $('subdirs').innerHTML = '';
+            $('empty').style.display = 'none';
+            $('count').textContent = '加载中...';
+
+            try {
+                const url = `${API}/browse?dir=${encodeURIComponent(dir)}`;
+                const res = await fetch(url);
+                const data = await res.json();
+
+                // Breadcrumb
+                let html = `<a onclick="nav('')">detection_results</a>`;
+                data.breadcrumbs.forEach(b => {
+                    html += ` <span class="sep">›</span> <a onclick="nav('${b.path}')">${b.name}</a>`;
+                });
+                if (data.breadcrumbs.length > 0) {
+                    html += ` <span class="sep">›</span> <span class="current">${data.breadcrumbs[data.breadcrumbs.length-1].name}</span>`;
+                    // Add good/bad badge
+                    const last = data.breadcrumbs[data.breadcrumbs.length-1].name;
+                    if (last === 'good') html += ` <span class="badge good">良品</span>`;
+                    if (last === 'bad') html += ` <span class="badge bad">不良品</span>`;
+                }
+                $('breadcrumb').innerHTML = html;
+
+                // Subdirs
+                if (data.subdirs.length > 0) {
+                    $('subdirs').innerHTML = data.subdirs.map(d => {
+                        const fullPath = dir ? dir + '/' + d : d;
+                        return `<a class="subdir-btn" onclick="nav('${fullPath}')">📁 ${d}</a>`;
+                    }).join('');
+                }
+
+                // Files
+                currentFiles = data.files;
+                if (currentFiles.length === 0) {
+                    $('empty').style.display = 'block';
+                    $('count').textContent = '0 张图片';
+                    return;
+                }
+
+                $('count').textContent = `${currentFiles.length} 张图片`;
+
+                // Sort: bad first, then good, then by filename
+                currentFiles.sort((a, b) => b.localeCompare(a));
+
+                $('gallery').innerHTML = currentFiles.map((f, i) => {
+                    const imgPath = `${BASE}${dir ? dir + '/' : ''}${f}`;
+                    return `<div class="gallery-item" onclick="openLightbox(${i})">
+                        <img src="${imgPath}" alt="${f}" loading="lazy">
+                        <div class="fname">${f}</div>
+                    </div>`;
+                }).join('');
+
+            } catch (e) {
+                $('count').textContent = '加载失败';
+                $('empty').style.display = 'block';
+                $('empty').textContent = '加载失败: ' + e.message;
+            }
+        }
+
+        function openLightbox(idx) {
+            currentIdx = idx;
+            updateLightbox();
+            $('lightbox').classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeLightbox() {
+            $('lightbox').classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        function updateLightbox() {
+            const f = currentFiles[currentIdx];
+            const imgPath = `${BASE}${currentDir ? currentDir + '/' : ''}${f}`;
+            $('lbImg').src = imgPath;
+            $('lbInfo').textContent = `${currentIdx + 1} / ${currentFiles.length}  —  ${f}`;
+            $('lbPrev').style.display = currentIdx > 0 ? 'block' : 'none';
+            $('lbNext').style.display = currentIdx < currentFiles.length - 1 ? 'block' : 'none';
+        }
+
+        // Nav via hash
+        window.nav = function(dir) {
+            if (dir) {
+                history.pushState(null, '', BASE + dir + '/');
+            } else {
+                history.pushState(null, '', BASE);
+            }
+            loadDir(dir);
+        };
+
+        $('lbClose').onclick = closeLightbox;
+        $('lbPrev').onclick = () => { if (currentIdx > 0) { currentIdx--; updateLightbox(); } };
+        $('lbNext').onclick = () => { if (currentIdx < currentFiles.length - 1) { currentIdx++; updateLightbox(); } };
+
+        $('lightbox').onclick = (e) => { if (e.target === $('lightbox')) closeLightbox(); };
+
+        document.addEventListener('keydown', (e) => {
+            if (!$('lightbox').classList.contains('active')) return;
+            if (e.key === 'Escape') closeLightbox();
+            if (e.key === 'ArrowLeft' && currentIdx > 0) { currentIdx--; updateLightbox(); }
+            if (e.key === 'ArrowRight' && currentIdx < currentFiles.length - 1) { currentIdx++; updateLightbox(); }
+        });
+
+        window.addEventListener('popstate', () => loadDir(getPath()));
+
+        // Init
+        const initDir = getPath();
+        loadDir(initDir);
+    })();
+    </script>
+</body>
+</html>
