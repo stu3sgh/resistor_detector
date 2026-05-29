@@ -413,8 +413,8 @@ class Handler(BaseHTTPRequestHandler):
                 "bad": int((labels == 1).sum()) if len(labels) > 0 else '?'
             })
 
-        # --- /browse?dir=xxx ---
-        elif path == '/browse':
+        # --- /browse?dir=xxx (also /api/browse for frontend proxy) ---
+        elif path in ('/browse', '/api/browse'):
             qs = parse_qs(parsed.query)
             rel_dir = qs.get('dir', [''])[0].strip('/')
             # Security: only allow paths under SAVE_DIR
